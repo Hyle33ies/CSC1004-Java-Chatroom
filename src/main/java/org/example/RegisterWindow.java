@@ -11,12 +11,14 @@ import java.awt.event.WindowEvent;
  */
 public class RegisterWindow {
     Frame frame;
-    public void start(){
+    int x;
+    int y;
+    public RegisterWindow(){
         frame = new Frame();
         frame.setBackground(Color.gray);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = (int) ((screenSize.getWidth() - frame.getWidth()) / 2);
-        int y = (int) ((screenSize.getHeight() - frame.getHeight()) / 2);
+        x = (int) ((screenSize.getWidth() - frame.getWidth()) / 2);
+        y = (int) ((screenSize.getHeight() - frame.getHeight()) / 2);
         frame.setBounds(x - 200, y - 100, 500, 300);
         frame.setResizable(false);
         frame.setAlwaysOnTop(true);
@@ -29,6 +31,13 @@ public class RegisterWindow {
                 frame.dispose();
             }
         });
+    }
+    public void start(){
         //information fill-up
+        Label userName = new Label("username", Label.CENTER);
+        userName.setBackground(Color.lightGray);
+        userName.setLocation(100, 100);
+        userName.setSize(100,28);
+        frame.add(userName);
     }
 }
