@@ -1,5 +1,6 @@
 package org.example;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -10,13 +11,13 @@ import java.awt.event.*;
  */
 public class Login {
     private Frame frame;
-    protected Dialog dialog;
+    protected JDialog dialog;
     private void ExitConfirm(){
         //Dialog of closing
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int x = (int) ((screenSize.getWidth() - frame.getWidth()) / 2);
         int y = (int) ((screenSize.getHeight() - frame.getHeight()) / 2);
-        dialog = new Dialog(frame, "Do you really wanna close Chatroom?", true);
+        dialog = new JDialog(frame, "Close Chatroom?", true);
         dialog.setBounds(x-50, y-50, 200, 100);
         dialog.setResizable(false);
         dialog.add(new Label("Do you want to exit?"), BorderLayout.NORTH);
@@ -28,6 +29,7 @@ public class Login {
             @Override
             public void mouseClicked(MouseEvent e) {
                 frame.dispose();
+                System.exit(0);
             }
         });
         ExitNo.addMouseListener(new MouseAdapter() {
