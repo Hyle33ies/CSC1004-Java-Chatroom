@@ -1,10 +1,9 @@
 package org.example;
 
-import org.example.tools.StreamUtils;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import org.example.tools.User;
 
 /**
  * User: HP
@@ -294,7 +293,7 @@ public class RegisterWindow {
                 }
                 else{
                     //valid information!
-                    StreamUtils.User newUser = new StreamUtils.User(s1,s2,age,sex,email,country,city,intro);
+                    User newUser = new User(s1,s2,age,sex,email,country,city,intro);
                     //todo!!!! store the user into database
                     //dialog
                     JDialog d1 = new JDialog(Jframe, "Success!!!", false);
