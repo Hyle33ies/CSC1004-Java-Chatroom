@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.tools.StreamUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -109,7 +111,7 @@ public class RegisterWindow {
         sex2.setBounds(150, 90, 60, 26);
         Checkbox sex3 = new Checkbox("Other", sexGroup, false);
         sex3.setBounds(220, 90, 60, 26);
-        Checkbox sex4 = new Checkbox("Prefer not to say", sexGroup, false);
+        Checkbox sex4 = new Checkbox("Prefer not to say", sexGroup, true);
         sex4.setBounds(280, 90, 140, 26);
         container.add(sex1);
         container.add(sex2);
@@ -182,11 +184,11 @@ public class RegisterWindow {
 
         //Button
         JButton clear = new JButton("CLEAR ALL");
-        clear.setBounds(70,470,140,30);
+        clear.setBounds(70, 470, 140, 30);
         container.add(clear);
 
         JButton submit = new JButton("REGISTER!");
-        submit.setBounds(250, 470, 140,30);
+        submit.setBounds(250, 470, 140, 30);
         container.add(submit);
         //
         clear.addMouseListener(new MouseAdapter() {
@@ -213,7 +215,111 @@ public class RegisterWindow {
         submit.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
+                //check if the information is right
+                String s1 = userNameFill.getText();
+                String s2= passwordFill.getText();
+                int age = Integer.parseInt(ageFill.getText());
+                Checkbox sexCheckbox = sexGroup.getSelectedCheckbox();
+                String sex = sexCheckbox.getLabel();
+                String email = mailFill.getText();
+                String country = countryFill.getText();
+                String city = cityFill.getText();
+                String intro = introFill.getText();
+                if (!s1.matches("^[a-zA-Z0-9_@#$%^&]{6,20}") || !s2.matches("^[a-zA-Z0-9_@#$%^&]{6,20}")) {
+                    //dialog
+                    JDialog d1 = new JDialog(Jframe, "username/password invalid!", false);
+                    //content
+                    JButton b1 = new JButton("OK");
+                    b1.setBounds(0, 0, 250, 100);
+                    b1.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                    d1.add(b1);
+                    //action
+                    d1.setBounds(300, 350, 250, 100);
+                    d1.setVisible(true);
+                    d1.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                }else if(age < -1 || age > 121){
+                    //dialog
+                    JDialog d1 = new JDialog(Jframe, "age invalid!", false);
+                    //content
+                    JButton b1 = new JButton("OK");
+                    b1.setBounds(0, 0, 250, 100);
+                    b1.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                    d1.add(b1);
+                    //action
+                    d1.setBounds(300, 350, 250, 100);
+                    d1.setVisible(true);
+                    d1.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                }else if(!email.matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)+$")){
+                    //dialog
+                    JDialog d1 = new JDialog(Jframe, "email invalid!", false);
+                    //content
+                    JButton b1 = new JButton("Fine");
+                    b1.setBounds(0, 0, 250, 100);
+                    b1.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                    d1.add(b1);
+                    //action
+                    d1.setBounds(300, 350, 250, 100);
+                    d1.setVisible(true);
+                    d1.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                }
+                else{
+                    //valid information!
+                    StreamUtils.User newUser = new StreamUtils.User(s1,s2,age,sex,email,country,city,intro);
+                    //todo!!!! store the user into database
+                    //dialog
+                    JDialog d1 = new JDialog(Jframe, "Success!!!", false);
+                    //content
+                    JButton b1 = new JButton("Great!");
+                    b1.setBounds(0, 0, 250, 100);
+                    b1.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            d1.dispose();
+                            Jframe.setVisible(false);
+                        }
+                    });
+                    d1.add(b1);
+                    //action
+                    d1.setBounds(300, 350, 250, 100);
+                    d1.setVisible(true);
+                    d1.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                }
+
             }
         });
         Jframe.add(container);

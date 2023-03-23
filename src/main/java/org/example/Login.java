@@ -189,5 +189,22 @@ public class Login {
                 dialog.setVisible(true);
             }
         });
+
+        //part2:login verification
+        label1.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                //verify the user's password!
+                //todo!!! compare it with database.
+                String s1 = field1.getText();//username
+                String s2 = field2.getText();//password
+                if(s1.equals("admin")&&s2.equals("admin")){
+                    //temporary success
+                    Chatroom chatroom = new Chatroom();
+                    chatroom.start();
+                    frame.setVisible(false);
+                }
+            }
+        });
     }
 }
