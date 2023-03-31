@@ -74,13 +74,11 @@ public class Chatroom{
         helpMenu.add(aboutMenuItem);
         menuBar.add(helpMenu);
 
-
-        // Friends list
         // Friends list panel
         JPanel friendsListPanel = new JPanel(new BorderLayout());
         mainPanel.add(friendsListPanel, BorderLayout.WEST);
 
-// Friends list title
+        // Friends list title
         JPanel friendsPanel = new JPanel(new BorderLayout());
         JLabel friendsListTitle = new JLabel("FRIENDS");
         friendsListTitle.setHorizontalAlignment(SwingConstants.CENTER);
@@ -102,7 +100,6 @@ public class Chatroom{
 
 
 
-// Friends list
         // Friends list
         friendsListModel = new DefaultListModel<>();
         friendsListModel.addElement("User1");
@@ -276,11 +273,11 @@ public class Chatroom{
         messageField.setWrapStyleWord(true);
     }
 
-    class AddUserDialog extends JDialog {
-        private JTextField userNameField;
-        private JTextField ipAddressField;
-        private JTextField portField;
-        private JButton addButton;
+    static class AddUserDialog extends JDialog {
+        private final JTextField userNameField;
+        private final JTextField ipAddressField;
+        private final JTextField portField;
+        private final JButton addButton;
         private String newUserName;
 
         public AddUserDialog(JFrame owner) {
