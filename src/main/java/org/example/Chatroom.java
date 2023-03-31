@@ -1,8 +1,14 @@
 package org.example;
 
+import org.example.tools.Message;
+import org.example.tools.User;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -19,13 +25,19 @@ public class Chatroom{
     private JLabel chatWithLabel;
     private JPanel chatWithPanel;
     private Map<String, JTextPane> userChatPanes;
+    private final User current_user;
 
+
+    public Chatroom(User current_user) {
+        this.current_user = current_user;
+    }
 
     protected void start() {
         mainFrame = new JFrame("Chat Application");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setSize(800, 600);
         mainFrame.setLocationRelativeTo(null);
+        mainFrame.setAlwaysOnTop(true);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainFrame.add(mainPanel);
@@ -38,13 +50,59 @@ public class Chatroom{
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> System.exit(0));
         fileMenu.add(exitMenuItem);
+
+        JMenuItem switchUserMenuItem = new JMenuItem("Login with another user");
+        switchUserMenuItem.addActionListener(e -> {
+            mainFrame.dispose();
+            Login login = new Login();
+            login.start();
+        });
+        fileMenu.add(switchUserMenuItem);
+
         menuBar.add(fileMenu);
 
         JMenu helpMenu = new JMenu("Help");
         JMenuItem aboutMenuItem = new JMenuItem("About");
+        aboutMenuItem.addActionListener(e -> {
+            try {
+                File readmeFile = Paths.get("resources", "readme.md").toFile();
+                Desktop.getDesktop().open(readmeFile);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
         helpMenu.add(aboutMenuItem);
         menuBar.add(helpMenu);
 
+
+        // Friends list
+        // Friends list panel
+        JPanel friendsListPanel = new JPanel(new BorderLayout());
+        mainPanel.add(friendsListPanel, BorderLayout.WEST);
+
+// Friends list title
+        JPanel friendsPanel = new JPanel(new BorderLayout());
+        JLabel friendsListTitle = new JLabel("FRIENDS");
+        friendsListTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        friendsPanel.add(friendsListTitle, BorderLayout.NORTH);
+
+        JButton addUserButton = new JButton("Add User");
+        friendsPanel.add(addUserButton, BorderLayout.SOUTH);
+
+        addUserButton.addActionListener(e -> {
+            // Show a dialog to add a new user
+            AddUserDialog addUserDialog = new AddUserDialog(mainFrame);
+            addUserDialog.setVisible(true);
+
+            String newUser = addUserDialog.getNewUserName();
+            if (newUser != null) {
+                friendsListModel.addElement(newUser);
+            }
+        });
+
+
+
+// Friends list
         // Friends list
         friendsListModel = new DefaultListModel<>();
         friendsListModel.addElement("User1");
@@ -53,27 +111,63 @@ public class Chatroom{
 
         friendsList = new JList<>(friendsListModel);
         friendsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+//        JScrollPane friendsScrollPane = new JScrollPane(friendsList);
+//        mainPanel.add(friendsScrollPane, BorderLayout.WEST);
+        JScrollPane friendsScrollPane = new JScrollPane(friendsList);
+        friendsScrollPane.setPreferredSize(new Dimension(200, 0));
+
+        JPopupMenu userInfoMenu = new JPopupMenu();
+        JMenuItem showUserInfoItem = new JMenuItem("Show User Information");
+        userInfoMenu.add(showUserInfoItem);
+
+        //look up user's information
+        showUserInfoItem.addActionListener(e -> {
+            // Show a dialog with user information
+            JDialog userInfoDialog = new JDialog(mainFrame, "User Information", true);
+            userInfoDialog.setLayout(new GridLayout(6, 1));
+            userInfoDialog.add(new JLabel("Username: "));
+            userInfoDialog.add(new JLabel("Age: "));
+            userInfoDialog.add(new JLabel("Sex: "));
+            userInfoDialog.add(new JLabel("Country: "));
+            userInfoDialog.add(new JLabel("City: "));
+            userInfoDialog.add(new JLabel("Introduction: "));
+            userInfoDialog.pack();
+            userInfoDialog.setLocationRelativeTo(mainFrame);
+            userInfoDialog.setVisible(true);
+        });
         friendsList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                friendsList.requestFocusInWindow(); // Add this line
                 if (e.getClickCount() == 2) {
                     // Show chat panel with selected user
                     String selectedUser = friendsList.getSelectedValue();
                     chatWithLabel.setText("Chat with: " + selectedUser);
                     showChatPaneForUser(selectedUser);
+                } else if (e.getButton() == MouseEvent.BUTTON3) {
+                    userInfoMenu.show(friendsList, e.getX(), e.getY());
                 }
             }
         });
 
-        JScrollPane friendsScrollPane = new JScrollPane(friendsList);
-        friendsScrollPane.setPreferredSize(new Dimension(200, 0));
-        mainPanel.add(friendsScrollPane, BorderLayout.WEST);
+        friendsListPanel.add(friendsScrollPane, BorderLayout.CENTER);
+        friendsPanel.add(friendsScrollPane, BorderLayout.CENTER);
+        mainPanel.add(friendsPanel, BorderLayout.WEST);
+
+
 
         // Chat panel
         chatWithPanel = new JPanel(new BorderLayout());
+        JPanel userInfoPanel = new JPanel(new BorderLayout());
+        JLabel currentUserLabel = new JLabel("Current User @" + current_user.getUsername());
+        userInfoPanel.add(currentUserLabel, BorderLayout.WEST);
+
         chatWithLabel = new JLabel("Chat with: ");
         chatWithLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        chatWithPanel.add(chatWithLabel, BorderLayout.NORTH);
+        userInfoPanel.add(chatWithLabel, BorderLayout.EAST);
+
+        chatWithPanel.add(userInfoPanel, BorderLayout.NORTH);
 
         messagePane = new JTextPane();
         messagePane.setEditable(false);
@@ -88,6 +182,45 @@ public class Chatroom{
         JButton submitButton = new JButton("Submit");
         typingPanel.add(submitButton, BorderLayout.EAST);
         submitButton.addActionListener(e -> submitMessage());
+        submitButton.setPreferredSize(new Dimension(80, 40));
+
+        JButton sendFilesButton = new JButton("Files");
+        sendFilesButton.setPreferredSize(new Dimension(80, 20));
+        sendFilesButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int returnValue = fileChooser.showOpenDialog(mainFrame);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                // Perform file handling operations here
+            }
+        });
+
+        JButton emojiButton = new JButton("Emoji");
+        emojiButton.setPreferredSize(new Dimension(80, 20));
+// Add actionListener for emojiButton here
+
+        JButton historyButton = new JButton("History");
+        historyButton.setPreferredSize(new Dimension(80, 20));
+        historyButton.addActionListener(e -> {
+            JFrame historyFrame = new JFrame("History");
+            historyFrame.setAlwaysOnTop(true);
+            historyFrame.setSize(200, 600);
+            historyFrame.setLocationRelativeTo(mainFrame);
+            historyFrame.setVisible(true);
+        });
+
+        Dimension buttonSize = new Dimension(80, 20);
+        sendFilesButton.setMaximumSize(buttonSize);
+        emojiButton.setMaximumSize(buttonSize);
+        historyButton.setMaximumSize(buttonSize);
+
+        JPanel leftButtonPanel = new JPanel();
+        leftButtonPanel.setLayout(new BoxLayout(leftButtonPanel, BoxLayout.Y_AXIS));
+        leftButtonPanel.add(sendFilesButton);
+        leftButtonPanel.add(emojiButton);
+        leftButtonPanel.add(historyButton);
+
+        typingPanel.add(leftButtonPanel, BorderLayout.WEST);
 
         chatWithPanel.add(typingPanel, BorderLayout.SOUTH);
 
@@ -124,15 +257,63 @@ public class Chatroom{
 
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String sendTime = now.format(formatter);
 
-        String formattedMessage = "<font color=\"blue\"><b>admin [" + now.format(formatter) + "]:</b></font> " + message + "<br>";
-
+        // Create a Message object
+        Message msg = new Message();
+        msg.setSender(current_user.getUsername());
+        msg.setGetter(selectedUser);
+        msg.setContent(message);
+        msg.setSendTime(sendTime);
+        msg.setMesType("3");
+        String formattedMessage = "<font color=\"blue\"><b>admin [" + now.format(formatter) + "]:</b></font> " + message.replace("\n", "<br>") + "<br>";
         chatPane.setContentType("text/html");
         String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
         chatPane.setText(currentText + formattedMessage + "</body></html>");
 
         messageField.setText("");
+        messageField.setLineWrap(true);
+        messageField.setWrapStyleWord(true);
     }
+
+    class AddUserDialog extends JDialog {
+        private JTextField userNameField;
+        private JTextField ipAddressField;
+        private JTextField portField;
+        private JButton addButton;
+        private String newUserName;
+
+        public AddUserDialog(JFrame owner) {
+            super(owner, "Add User", true);
+            setLayout(new GridLayout(4, 2));
+
+            userNameField = new JTextField(10);
+            ipAddressField = new JTextField(10);
+            portField = new JTextField(10);
+            addButton = new JButton("Add");
+
+            add(new JLabel("Username:"));
+            add(userNameField);
+            add(new JLabel("IP Address:"));
+            add(ipAddressField);
+            add(new JLabel("Port:"));
+            add(portField);
+            add(addButton);
+
+            addButton.addActionListener(e -> {
+                newUserName = userNameField.getText().trim();
+                dispose();
+            });
+
+            pack();
+            setLocationRelativeTo(owner);
+        }
+
+        public String getNewUserName() {
+            return newUserName;
+        }
+    }
+
 }
 
 

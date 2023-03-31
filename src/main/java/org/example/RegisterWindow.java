@@ -3,6 +3,8 @@ package org.example;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.*;
+
 import org.example.tools.User;
 
 /**
@@ -15,7 +17,7 @@ public class RegisterWindow {
     int x;
     int y;
 
-    public RegisterWindow() {
+    public RegisterWindow() throws ClassNotFoundException {
         Jframe = new JFrame();
         Jframe.setBackground(Color.lightGray);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -216,7 +218,7 @@ public class RegisterWindow {
             public void mouseClicked(MouseEvent e) {
                 //check if the information is right
                 String s1 = userNameFill.getText();
-                String s2= passwordFill.getText();
+                String s2 = passwordFill.getText();
                 int age = Integer.parseInt(ageFill.getText());
                 Checkbox sexCheckbox = sexGroup.getSelectedCheckbox();
                 String sex = sexCheckbox.getLabel();
@@ -246,7 +248,7 @@ public class RegisterWindow {
                             d1.dispose();
                         }
                     });
-                }else if(age < -1 || age > 121){
+                } else if (age < -1 || age > 121) {
                     //dialog
                     JDialog d1 = new JDialog(Jframe, "age invalid!", false);
                     //content
@@ -268,7 +270,7 @@ public class RegisterWindow {
                             d1.dispose();
                         }
                     });
-                }else if(!email.matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)+$")){
+                } else if (!email.matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)+$")) {
                     //dialog
                     JDialog d1 = new JDialog(Jframe, "email invalid!", false);
                     //content
@@ -290,33 +292,63 @@ public class RegisterWindow {
                             d1.dispose();
                         }
                     });
-                }
-                else{
+                } else {
                     //valid information!
-                    User newUser = new User(s1,s2,age,sex,email,country,city,intro);
-                    //todo!!!! store the user into database
-                    //dialog
-                    JDialog d1 = new JDialog(Jframe, "Success!!!", false);
-                    //content
-                    JButton b1 = new JButton("Great!");
-                    b1.setBounds(0, 0, 250, 100);
-                    b1.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            d1.dispose();
-                            Jframe.setVisible(false);
+                    User newUser = new User(s1, s2, age, sex, email, country, city, intro);
+                    Connection connection;
+                    try {
+                        Class.forName("com.mysql.cj.jdbc.Driver");
+                        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
+                        String sql = "select * from users where username = ? or email = ?";
+                        PreparedStatement statement = connection.prepareStatement(sql);
+                        statement.setObject(1, s1);
+                        statement.setObject(2, email);
+                        ResultSet result = statement.executeQuery();
+                        if (result.next()) {
+                            //fail
+                            Login.ErrorDialog ed = new Login.ErrorDialog(Jframe, "This username or email has been used!");
+                        } else {
+                            sql = "insert into users (username, password, age, sex, email, country, city, introduction) " +
+                                    "values(?,?,?,?,?,?,?,?)";
+                            PreparedStatement statement1 = connection.prepareStatement(sql);
+                            statement1.setObject(1,s1);
+                            statement1.setObject(2,s2);
+                            statement1.setInt(3,age);
+                            statement1.setObject(4,sex);
+                            statement1.setObject(5,email);
+                            statement1.setObject(6,country);
+                            statement1.setObject(7,city);
+                            statement1.setObject(8,intro);
+                            int resultUpdate = statement1.executeUpdate();
+                            System.out.println(resultUpdate);
+                            //dialog
+                            JDialog d1 = new JDialog(Jframe, "Success!!!", false);
+                            //content
+                            JButton b1 = new JButton("Great!");
+                            b1.setBounds(0, 0, 250, 100);
+                            b1.addMouseListener(new MouseAdapter() {
+                                @Override
+                                public void mouseClicked(MouseEvent e) {
+                                    d1.dispose();
+                                    Jframe.setVisible(false);
+                                }
+                            });
+                            d1.add(b1);
+                            //action
+                            d1.setBounds(300, 350, 250, 100);
+                            d1.setVisible(true);
+                            d1.addWindowListener(new WindowAdapter() {
+                                @Override
+                                public void windowClosing(WindowEvent e) {
+                                    d1.dispose();
+                                }
+                            });
                         }
-                    });
-                    d1.add(b1);
-                    //action
-                    d1.setBounds(300, 350, 250, 100);
-                    d1.setVisible(true);
-                    d1.addWindowListener(new WindowAdapter() {
-                        @Override
-                        public void windowClosing(WindowEvent e) {
-                            d1.dispose();
-                        }
-                    });
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
 
             }

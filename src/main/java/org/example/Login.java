@@ -1,8 +1,12 @@
 package org.example;
 
+import com.mysql.cj.jdbc.Driver;
+import org.example.tools.User;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.*;
 
 /**
  * User: HP
@@ -100,7 +104,12 @@ public class Login {
         label2.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                RegisterWindow Register = new RegisterWindow();
+                RegisterWindow Register = null;
+                try {
+                    Register = new RegisterWindow();
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                }
                 Register.start();
             }
         });
@@ -152,7 +161,12 @@ public class Login {
         menuRegister.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                RegisterWindow Register = new RegisterWindow();
+                RegisterWindow Register = null;
+                try {
+                    Register = new RegisterWindow();
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                }
                 Register.start();
             }
         });
@@ -195,16 +209,69 @@ public class Login {
             @Override
             public void mouseClicked(MouseEvent e) {
                 //verify the user's password!
-                //todo!!! compare it with database.
                 String s1 = field1.getText();//username
                 String s2 = field2.getText();//password
-                if(s1.equals("admin")&&s2.equals("admin")){
+                User login_user = new User();
+                boolean ifOK;
+                try {
+                    ifOK = checkUsers(s1,s2,login_user);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                if(ifOK){
                     //temporary success
-                    Chatroom chatroom = new Chatroom();
+                    Chatroom chatroom = new Chatroom(login_user);
                     chatroom.start();
                     frame.setVisible(false);
+                }else{
+                    ErrorDialog ed = new ErrorDialog(frame,"Wrong Password Or Username does not exist!");
                 }
             }
         });
+    }
+    static boolean checkUsers(String username, String password, User login_user) throws SQLException, ClassNotFoundException {
+//        DriverManager.registerDriver(new Driver());
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users","root","@Frankett2004");
+        String sql = "select * from users where username = ? and password = ?";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setObject(1,username);
+        statement.setObject(2,password);
+        ResultSet result = statement.executeQuery();
+        if (result.next()){
+            login_user.setUsername(username);
+            login_user.setPasswd(password);
+            login_user.setAge(result.getInt(4));
+            login_user.setSex(result.getString(5));
+            login_user.setEmail(result.getString(6));
+            login_user.setCountry(result.getString(7));
+            login_user.setCity(result.getString(8));
+            login_user.setIntro(result.getString(9));
+            return true;
+        }
+        return false;
+    }
+
+    static class ErrorDialog extends JDialog {
+
+        public ErrorDialog(Frame parent, String message) {
+            super(parent, "Error", true);
+            JPanel panel = new JPanel();
+            JLabel label = new JLabel(message);
+            panel.add(label);
+
+            JButton button = new JButton("Get it!");
+            button.addActionListener(e -> dispose());
+            panel.add(button);
+
+            getContentPane().add(panel);
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            pack();
+            setLocationRelativeTo(null);
+            setVisible(true);
+        }
     }
 }

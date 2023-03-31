@@ -20,7 +20,10 @@ public class User implements Serializable {
         private String city = "";
         private String intro = "";
 
-        public User(String username, String passwd, int age, String sex, String email, String country, String city, String intro) {
+    public User() {
+    }
+
+    public User(String username, String passwd, int age, String sex, String email, String country, String city, String intro) {
             this.username = username;
             this.passwd = passwd;
             this.age = age;
