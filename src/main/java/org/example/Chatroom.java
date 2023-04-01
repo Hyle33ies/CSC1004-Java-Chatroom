@@ -187,9 +187,7 @@ public class Chatroom {
         // 4. Add User menu
         JMenu userMenu = new JMenu("User");
         JMenuItem currentUserMenuItem = new JMenuItem("Current User");
-        currentUserMenuItem.addActionListener(e -> {
-            JOptionPane.showMessageDialog(mainFrame, "Username: " + current_user.getUsername() + "\nAge: " + current_user.getAge() + "\nSex: " + current_user.getSex() + "\nCountry: " + current_user.getCountry() + "\nCity: " + current_user.getCity() + "\nIntroduction: " + current_user.getIntro(), "User Information", JOptionPane.INFORMATION_MESSAGE);
-        });
+        currentUserMenuItem.addActionListener(e -> JOptionPane.showMessageDialog(mainFrame, "Username: " + current_user.getUsername() + "\nAge: " + current_user.getAge() + "\nSex: " + current_user.getSex() + "\nCountry: " + current_user.getCountry() + "\nCity: " + current_user.getCity() + "\nIntroduction: " + current_user.getIntro(), "User Information", JOptionPane.INFORMATION_MESSAGE));
         userMenu.add(currentUserMenuItem);
         menuBar.add(userMenu);
 
