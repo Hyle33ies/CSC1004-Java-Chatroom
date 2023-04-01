@@ -8,13 +8,15 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Chatroom{
+public class Chatroom {
 
     private JFrame mainFrame;
     private JList<String> friendsList;
@@ -46,9 +48,29 @@ public class Chatroom{
         JMenuBar menuBar = new JMenuBar();
         mainFrame.setJMenuBar(menuBar);
 
-        JMenu fileMenu = new JMenu("File");
+        JMenu fileMenu = new JMenu("Actions");
+
+        // Add a Friend menu item
+        JMenuItem addFriendMenuItem = new JMenuItem("Add a Friend");
+        addFriendMenuItem.addActionListener(e -> {
+            AddUserDialog addUserDialog = new AddUserDialog(mainFrame);
+            addUserDialog.setVisible(true);
+
+            String newUser = addUserDialog.getNewUserName();
+            if (newUser != null) {
+                friendsListModel.addElement(newUser);
+            }
+        });
+        fileMenu.add(addFriendMenuItem);
+
+        // Exit menu item
         JMenuItem exitMenuItem = new JMenuItem("Exit");
-        exitMenuItem.addActionListener(e -> System.exit(0));
+        exitMenuItem.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            }
+        });
         fileMenu.add(exitMenuItem);
 
         JMenuItem switchUserMenuItem = new JMenuItem("Login with another user");
@@ -99,7 +121,6 @@ public class Chatroom{
         });
 
 
-
         // Friends list
         friendsListModel = new DefaultListModel<>();
         friendsListModel.addElement("User1");
@@ -109,8 +130,6 @@ public class Chatroom{
         friendsList = new JList<>(friendsListModel);
         friendsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-//        JScrollPane friendsScrollPane = new JScrollPane(friendsList);
-//        mainPanel.add(friendsScrollPane, BorderLayout.WEST);
         JScrollPane friendsScrollPane = new JScrollPane(friendsList);
         friendsScrollPane.setPreferredSize(new Dimension(200, 0));
 
@@ -152,7 +171,27 @@ public class Chatroom{
         friendsPanel.add(friendsScrollPane, BorderLayout.CENTER);
         mainPanel.add(friendsPanel, BorderLayout.WEST);
 
+        // 3. Add About the developer menu item
+        JMenuItem aboutDeveloperMenuItem = new JMenuItem("About the developer");
+        aboutDeveloperMenuItem.addActionListener(e -> {
+            try {
+                Desktop.getDesktop().browse(new URI("https://www.example.com"));
+            } catch (IOException | URISyntaxException ex) {
+                ex.printStackTrace();
+            }
+        });
+        helpMenu.add(aboutDeveloperMenuItem);
 
+        menuBar.add(helpMenu);
+
+        // 4. Add User menu
+        JMenu userMenu = new JMenu("User");
+        JMenuItem currentUserMenuItem = new JMenuItem("Current User");
+        currentUserMenuItem.addActionListener(e -> {
+            JOptionPane.showMessageDialog(mainFrame, "Username: " + current_user.getUsername() + "\nAge: " + current_user.getAge() + "\nSex: " + current_user.getSex() + "\nCountry: " + current_user.getCountry() + "\nCity: " + current_user.getCity() + "\nIntroduction: " + current_user.getIntro(), "User Information", JOptionPane.INFORMATION_MESSAGE);
+        });
+        userMenu.add(currentUserMenuItem);
+        menuBar.add(userMenu);
 
         // Chat panel
         chatWithPanel = new JPanel(new BorderLayout());
@@ -180,6 +219,9 @@ public class Chatroom{
         typingPanel.add(submitButton, BorderLayout.EAST);
         submitButton.addActionListener(e -> submitMessage());
         submitButton.setPreferredSize(new Dimension(80, 40));
+        //Add a keyboard shortcut "ctrl + Enter" for submitButton
+        submitButton.registerKeyboardAction(e -> submitMessage(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
+//        submitButton.registerKeyboardAction(e -> submitMessage(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         JButton sendFilesButton = new JButton("Files");
         sendFilesButton.setPreferredSize(new Dimension(80, 20));
@@ -194,14 +236,14 @@ public class Chatroom{
 
         JButton emojiButton = new JButton("Emoji");
         emojiButton.setPreferredSize(new Dimension(80, 20));
-// Add actionListener for emojiButton here
+        // Add actionListener for emojiButton here
 
         JButton historyButton = new JButton("History");
         historyButton.setPreferredSize(new Dimension(80, 20));
         historyButton.addActionListener(e -> {
             JFrame historyFrame = new JFrame("History");
             historyFrame.setAlwaysOnTop(true);
-            historyFrame.setSize(200, 600);
+            historyFrame.setSize(300, 600);
             historyFrame.setLocationRelativeTo(mainFrame);
             historyFrame.setVisible(true);
         });
@@ -225,7 +267,20 @@ public class Chatroom{
 
         // Initialize userChatPanes
         userChatPanes = new HashMap<>();
+        mainFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
+                if (result == JOptionPane.YES_OPTION) {
+                    System.exit(0);
+                }
+            }
+        });
 
+        mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        mainFrame.setResizable(false);
+        mainFrame.setSize(800, 600);
+        mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
     }
 
