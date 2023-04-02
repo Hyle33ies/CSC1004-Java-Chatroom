@@ -2,7 +2,9 @@ package org.example;
 
 import com.mysql.cj.jdbc.Driver;
 import org.example.tools.User;
-
+import java.awt.Checkbox;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,6 +18,12 @@ import java.sql.*;
 public class Login {
     private Frame frame;
     protected JDialog dialog;
+    Connection connection;
+
+    public Login() throws SQLException {
+        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
+    }
+
     private void ExitConfirm(){
         //Dialog of closing
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -60,40 +68,15 @@ public class Login {
         frame.setTitle("Welcome to Chatroom v1.0");
         frame.setVisible(true);
         //listener
-        frame.addWindowListener(new WindowListener() {
-            @Override
-            public void windowOpened(WindowEvent e) {
-
-            }
-
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-
+                frame.dispose();
             }
 
             @Override
             public void windowClosed(WindowEvent e) {
                 frame.dispose();
-            }
-
-            @Override
-            public void windowIconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeiconified(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
-
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-
             }
         });
         //layout
@@ -143,6 +126,17 @@ public class Login {
         Checkbox checkbox = new Checkbox("remember me");
         checkbox.setBounds(390, 140, 100, 50);
         frame.add(checkbox);
+        User rememberedUser;
+        try {
+            rememberedUser = loadRememberedUser();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        if (rememberedUser != null) {
+            field1.setText(rememberedUser.getUsername());
+            field2.setText(rememberedUser.getPasswd());
+            checkbox.setState(true);
+        }
         //Menubar
         MenuBar bar = new MenuBar();
         Menu menu1 = new Menu("HELP");
@@ -208,26 +202,36 @@ public class Login {
         label1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                //verify the user's password!
-                String s1 = field1.getText();//username
-                String s2 = field2.getText();//password
-                User login_user = new User();
+                // Verify the user's password!
+                String s1 = field1.getText(); // Username
+                String s2 = field2.getText(); // Password
+                User loginUser = new User();
                 boolean ifOK;
                 try {
-                    ifOK = checkUsers(s1,s2,login_user);
+                    ifOK = checkUsers(s1, s2, loginUser);
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 } catch (ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
                 }
 
-                if(ifOK){
-                    //temporary success
-                    Chatroom chatroom = new Chatroom(login_user);
+                if (ifOK) {
+                    // Temporary success
+                    Chatroom chatroom = new Chatroom(loginUser);
                     chatroom.start();
                     frame.setVisible(false);
-                }else{
-                    ErrorDialog ed = new ErrorDialog(frame,"Wrong Password Or Username does not exist!");
+
+                    try {
+                        if (checkbox.getState()) {
+                            saveRememberedUser(s1, s2);
+                        } else {
+                            deleteRememberedUser();
+                        }
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                } else {
+                    ErrorDialog ed = new ErrorDialog(frame, "Wrong Password Or Username does not exist!");
                 }
             }
         });
@@ -273,5 +277,31 @@ public class Login {
             setLocationRelativeTo(null);
             setVisible(true);
         }
+    }
+    // Add these methods to the Login class
+    private void saveRememberedUser(String username, String password) throws SQLException {
+        String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?) ON DUPLICATE KEY UPDATE username=?, password=?";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setString(1, username);
+        statement.setString(2, password);
+        statement.setString(3, username);
+        statement.setString(4, password);
+        statement.executeUpdate();
+    }
+
+    private void deleteRememberedUser() throws SQLException {
+        String sql = "DELETE FROM user_remember";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.executeUpdate();
+    }
+
+    private User loadRememberedUser() throws SQLException {
+        String sql = "SELECT * FROM user_remember LIMIT 1";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        ResultSet result = statement.executeQuery();
+        if (result.next()) {
+            return new User(result.getString("username"), result.getString("password"));
+        }
+        return null;
     }
 }

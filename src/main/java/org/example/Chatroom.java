@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -76,7 +77,12 @@ public class Chatroom {
         JMenuItem switchUserMenuItem = new JMenuItem("Login with another user");
         switchUserMenuItem.addActionListener(e -> {
             mainFrame.dispose();
-            Login login = new Login();
+            Login login = null;
+            try {
+                login = new Login();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
             login.start();
         });
         fileMenu.add(switchUserMenuItem);
