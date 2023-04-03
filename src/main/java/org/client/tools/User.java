@@ -1,7 +1,11 @@
-package org.example.tools;
+package org.client.tools;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * User: HP
@@ -19,6 +23,23 @@ public class User implements Serializable {
         private String country = "";
         private String city = "";
         private String intro = "";
+    public void updateUser() throws SQLException, ClassNotFoundException {
+        if (!"admin".equalsIgnoreCase(getUsername())) {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004")) {
+                String query = "UPDATE users SET age = ?, sex = ?, country = ?, city = ?, introduction = ? WHERE username = ?";
+                try (PreparedStatement statement = connection.prepareStatement(query)) {
+                    statement.setInt(1, getAge());
+                    statement.setString(2, getSex());
+                    statement.setString(3, getCountry());
+                    statement.setString(4, getCity());
+                    statement.setString(5, getIntro());
+                    statement.setString(6, getUsername());
+                    statement.executeUpdate();
+                }
+            }
+        }
+    }
 
     public User() {
     }

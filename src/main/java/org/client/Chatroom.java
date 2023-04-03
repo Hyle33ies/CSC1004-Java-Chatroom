@@ -1,13 +1,17 @@
-package org.example;
+package org.client;
 
-import org.example.tools.Message;
-import org.example.tools.User;
+import org.client.tools.Message;
+import org.client.tools.MessageType;
+import org.client.tools.User;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -29,10 +33,24 @@ public class Chatroom {
     private JPanel chatWithPanel;
     private Map<String, JTextPane> userChatPanes;
     private final User current_user;
+    private Socket socket;
+    private ObjectInputStream input;
+    private ObjectOutputStream output;
 
 
     public Chatroom(User current_user) {
         this.current_user = current_user;
+    }
+
+    private void connectToServer(String serverAddress, int serverPort) {
+        try {
+            socket = new Socket(serverAddress, serverPort);
+            output = new ObjectOutputStream(socket.getOutputStream());
+            input = new ObjectInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(mainFrame, "Error connecting to the server. Please try again later.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     protected void start() {
@@ -42,6 +60,9 @@ public class Chatroom {
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setAlwaysOnTop(true);
 
+        //connect to server
+        connectToServer("localhost", 8889);
+
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainFrame.add(mainPanel);
 
@@ -49,7 +70,7 @@ public class Chatroom {
         JMenuBar menuBar = new JMenuBar();
         mainFrame.setJMenuBar(menuBar);
 
-        JMenu fileMenu = new JMenu("Actions");
+        JMenu actionsMenu = new JMenu("Actions");
 
         // Add a Friend menu item
         JMenuItem addFriendMenuItem = new JMenuItem("Add a Friend");
@@ -62,7 +83,7 @@ public class Chatroom {
                 friendsListModel.addElement(newUser);
             }
         });
-        fileMenu.add(addFriendMenuItem);
+        actionsMenu.add(addFriendMenuItem);
 
         // Exit menu item
         JMenuItem exitMenuItem = new JMenuItem("Exit");
@@ -72,12 +93,13 @@ public class Chatroom {
                 System.exit(0);
             }
         });
-        fileMenu.add(exitMenuItem);
+        actionsMenu.add(exitMenuItem);
 
         JMenuItem switchUserMenuItem = new JMenuItem("Login with another user");
         switchUserMenuItem.addActionListener(e -> {
+            sendExitMessage();
             mainFrame.dispose();
-            Login login = null;
+            Login login;
             try {
                 login = new Login();
             } catch (SQLException ex) {
@@ -85,9 +107,9 @@ public class Chatroom {
             }
             login.start();
         });
-        fileMenu.add(switchUserMenuItem);
+        actionsMenu.add(switchUserMenuItem);
 
-        menuBar.add(fileMenu);
+        menuBar.add(actionsMenu);
 
         JMenu helpMenu = new JMenu("Help");
         JMenuItem aboutMenuItem = new JMenuItem("About");
@@ -101,6 +123,15 @@ public class Chatroom {
         });
         helpMenu.add(aboutMenuItem);
         menuBar.add(helpMenu);
+
+        // In the Chatroom class, inside the start() method
+
+        JMenuItem updateProfileMenuItem = new JMenuItem("Update Profile");
+        updateProfileMenuItem.addActionListener(e -> {
+            UpdateProfileDialog updateProfileDialog = new UpdateProfileDialog(mainFrame, current_user, this);
+            updateProfileDialog.setVisible(true);
+        });
+        actionsMenu.add(updateProfileMenuItem);
 
         // Friends list panel
         JPanel friendsListPanel = new JPanel(new BorderLayout());
@@ -276,6 +307,7 @@ public class Chatroom {
             public void windowClosing(WindowEvent e) {
                 int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
+                    sendExitMessage();
                     System.exit(0);
                 }
             }
@@ -367,6 +399,99 @@ public class Chatroom {
 
         public String getNewUserName() {
             return newUserName;
+        }
+    }
+
+    static class UpdateProfileDialog extends JDialog {
+        private final JTextField ageField;
+        private final JTextField sexField;
+        private final JTextField countryField;
+        private final JTextField cityField;
+        private final JTextField introField;
+        private final JButton updateButton;
+        private final User currentUser;
+        private final Chatroom mainClassReference;
+
+
+
+        public UpdateProfileDialog(JFrame owner, User currentUser, Chatroom mainClassReference) {
+            super(owner, "Update Profile", false);
+            setLayout(new GridLayout(6, 2));
+
+            this.currentUser = currentUser;
+
+            ageField = new JTextField(10);
+            sexField = new JTextField(10);
+            countryField = new JTextField(10);
+            cityField = new JTextField(10);
+            introField = new JTextField(10);
+            updateButton = new JButton("Update");
+
+            ageField.setText(String.valueOf(currentUser.getAge()));
+            sexField.setText(currentUser.getSex());
+            countryField.setText(currentUser.getCountry());
+            cityField.setText(currentUser.getCity());
+            introField.setText(currentUser.getIntro());
+
+            add(new JLabel("Age:"));
+            add(ageField);
+            add(new JLabel("Sex:"));
+            add(sexField);
+            add(new JLabel("Country:"));
+            add(countryField);
+            add(new JLabel("City:"));
+            add(cityField);
+            add(new JLabel("Introduction:"));
+            add(introField);
+            add(updateButton);
+            this.mainClassReference = mainClassReference;
+
+            updateButton.addActionListener(e -> {
+                String ageText = ageField.getText().trim();
+                String sexText = sexField.getText().trim();
+
+                if (ageText.isEmpty() || sexText.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Age and Sex fields cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    currentUser.setAge(Integer.parseInt(ageText));
+                    currentUser.setSex(sexText);
+                    currentUser.setCountry(countryField.getText().trim());
+                    currentUser.setCity(cityField.getText().trim());
+                    currentUser.setIntro(introField.getText().trim());
+
+                    // Call updateUserInfo() using the main class reference
+                    mainClassReference.updateUserInfo();
+
+                    dispose();
+                }
+            });
+            pack();
+            setLocationRelativeTo(owner);
+
+        }
+
+    }
+
+    private void updateUserInfo() {
+        try {
+            current_user.updateUser();
+        } catch (SQLException | ClassNotFoundException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(mainFrame, "Error updating user information. Please try again later.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void sendExitMessage() {
+        if (socket != null && output != null) {
+            try {
+                Message exitMessage = new Message();
+                exitMessage.setMesType(MessageType.MESSAGE_CLIENT_EXIT);
+                exitMessage.setSender(current_user.getUsername());
+                output.writeObject(exitMessage);
+                output.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

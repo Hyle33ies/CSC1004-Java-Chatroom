@@ -1,10 +1,9 @@
-package org.example;
+package org.client;
 
 import java.sql.SQLException;
 
-public class Main {
+public class Client {
     public static void main(String[] args) throws SQLException {
-//        System.out.println("Hello world!");
         Login login = new Login();
         login.start();
     }

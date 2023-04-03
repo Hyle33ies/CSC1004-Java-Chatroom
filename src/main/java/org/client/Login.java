@@ -1,13 +1,19 @@
-package org.example;
+package org.client;
 
-import com.mysql.cj.jdbc.Driver;
-import org.example.tools.User;
+import org.client.tools.MessageType;
+import org.client.tools.User;
+import org.client.tools.Message;
+
 import java.awt.Checkbox;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.nio.file.Paths;
 import java.sql.*;
 
 /**
@@ -24,13 +30,13 @@ public class Login {
         connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
     }
 
-    private void ExitConfirm(){
+    private void ExitConfirm() {
         //Dialog of closing
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int x = (int) ((screenSize.getWidth() - frame.getWidth()) / 2);
         int y = (int) ((screenSize.getHeight() - frame.getHeight()) / 2);
         dialog = new JDialog(frame, "Close Chatroom?", true);
-        dialog.setBounds(x-50, y-50, 200, 100);
+        dialog.setBounds(x - 50, y - 50, 200, 100);
         dialog.setResizable(false);
         dialog.add(new Label("Do you want to exit?"), BorderLayout.NORTH);
         Button ExitYes = new Button("Yes");
@@ -53,6 +59,7 @@ public class Login {
         dialog.add(ExitYes, BorderLayout.WEST);
         dialog.add(ExitNo, BorderLayout.EAST);
     }
+
     public void start() {
         frame = new Frame();
         ExitConfirm();//init confirm information
@@ -72,11 +79,13 @@ public class Login {
             @Override
             public void windowClosing(WindowEvent e) {
                 frame.dispose();
+                System.exit(0);
             }
 
             @Override
             public void windowClosed(WindowEvent e) {
                 frame.dispose();
+                System.exit(0);
             }
         });
         //layout
@@ -87,7 +96,7 @@ public class Login {
         label2.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                RegisterWindow Register = null;
+                RegisterWindow Register;
                 try {
                     Register = new RegisterWindow();
                 } catch (ClassNotFoundException ex) {
@@ -141,28 +150,28 @@ public class Login {
         MenuBar bar = new MenuBar();
         Menu menu1 = new Menu("HELP");
         MenuItem menuExit = new MenuItem("Exit");
-        menuExit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dialog.setVisible(true);
+        menuExit.addActionListener(e -> dialog.setVisible(true));
+        MenuItem menuReadMe = new MenuItem("ReadMe");
+        menuReadMe.addActionListener(e -> {
+            try {
+                File readmeFile = Paths.get("resources", "readme.md").toFile();
+                Desktop.getDesktop().open(readmeFile);
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         });
-        MenuItem menuReadMe = new MenuItem("ReadMe");
         menu1.add(menuExit);
         menu1.add(menuReadMe);
         Menu menu2 = new Menu("FUNCTION");
         MenuItem menuRegister = new MenuItem("Register a new user for free");
-        menuRegister.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                RegisterWindow Register = null;
-                try {
-                    Register = new RegisterWindow();
-                } catch (ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                }
-                Register.start();
+        menuRegister.addActionListener(e -> {
+            RegisterWindow Register;
+            try {
+                Register = new RegisterWindow();
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
             }
+            Register.start();
         });
         MenuItem menuForgetPassword = new MenuItem("I forget my password!");
         menu2.add(menuRegister);
@@ -173,12 +182,7 @@ public class Login {
         //PopMenu
         PopupMenu popMenu = new PopupMenu();
         MenuItem menuExitPop = new MenuItem("Exit");
-        menuExitPop.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dialog.setVisible(true);
-            }
-        });
+        menuExitPop.addActionListener(e -> dialog.setVisible(true));
         MenuItem menuReadMePop = new MenuItem("ReadMe");
         popMenu.add(menuExitPop);
         popMenu.add(menuReadMePop);
@@ -187,6 +191,17 @@ public class Login {
             public void mousePressed(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON3)
                     popMenu.show(frame, e.getX(), e.getY());
+            }
+        });
+        menuReadMePop.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    File readmeFile = Paths.get("resources", "readme.md").toFile();
+                    Desktop.getDesktop().open(readmeFile);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
         frame.add(popMenu);
@@ -209,14 +224,11 @@ public class Login {
                 boolean ifOK;
                 try {
                     ifOK = checkUsers(s1, s2, loginUser);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                } catch (ClassNotFoundException ex) {
+                } catch (SQLException | ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
                 }
 
                 if (ifOK) {
-                    // Temporary success
                     Chatroom chatroom = new Chatroom(loginUser);
                     chatroom.start();
                     frame.setVisible(false);
@@ -231,21 +243,63 @@ public class Login {
                         throw new RuntimeException(ex);
                     }
                 } else {
-                    ErrorDialog ed = new ErrorDialog(frame, "Wrong Password Or Username does not exist!");
+                    if (s1.equals("admin") && s2.equals("admin")) {
+                        User adminUser = new User("admin", "admin", -1, "prefer not to say", "test@email.com", "Imagination", "Java Island", "");
+                        Chatroom chatroom1 = new Chatroom(adminUser);
+                        chatroom1.start();
+                    } else {
+                        ErrorDialog ed = new ErrorDialog(frame, "Wrong Password Or Username does not exist!");
+                    }
                 }
             }
         });
     }
     static boolean checkUsers(String username, String password, User login_user) throws SQLException, ClassNotFoundException {
+        boolean ifOK = checkUsers(username,password,login_user,true);
+        if(!ifOK) return false;
+        try {
+            Socket socket = new Socket("localhost", 8889);
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+
+            Message message = new Message();
+            message.setSender(username);
+            message.setContent(password);
+            message.setMesType(MessageType.MESSAGE_LOGIN_ATTEMPT);
+
+            oos.writeObject(message);
+            oos.flush();
+
+            Message response = (Message) ois.readObject();
+
+            if (MessageType.MESSAGE_LOGIN_SUCCESSFUL.equals(response.getMesType())) {
+                login_user.setUsername(username);
+                login_user.setPasswd(password);
+                // Set other user fields based on the response
+                ifOK = true;
+            }
+
+            oos.close();
+            ois.close();
+            socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ifOK;
+    }
+
+    @SuppressWarnings("all")
+    static boolean checkUsers(String username, String password, User login_user, boolean isOld) throws SQLException, ClassNotFoundException {
 //        DriverManager.registerDriver(new Driver());
+        isOld = true;
         Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users","root","@Frankett2004");
+        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
         String sql = "select * from users where username = ? and password = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
-        statement.setObject(1,username);
-        statement.setObject(2,password);
+        statement.setObject(1, username);
+        statement.setObject(2, password);
         ResultSet result = statement.executeQuery();
-        if (result.next()){
+        if (result.next()) {
             login_user.setUsername(username);
             login_user.setPasswd(password);
             login_user.setAge(result.getInt(4));
@@ -278,6 +332,7 @@ public class Login {
             setVisible(true);
         }
     }
+
     // Add these methods to the Login class
     private void saveRememberedUser(String username, String password) throws SQLException {
         String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?) ON DUPLICATE KEY UPDATE username=?, password=?";

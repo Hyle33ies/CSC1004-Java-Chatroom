@@ -1,11 +1,11 @@
-package org.example;
+package org.client;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 
-import org.example.tools.User;
+import org.client.tools.User;
 
 /**
  * User: HP
@@ -344,9 +344,7 @@ public class RegisterWindow {
                                 }
                             });
                         }
-                    } catch (SQLException ex) {
-                        throw new RuntimeException(ex);
-                    } catch (ClassNotFoundException ex) {
+                    } catch (SQLException | ClassNotFoundException ex) {
                         throw new RuntimeException(ex);
                     }
                 }
