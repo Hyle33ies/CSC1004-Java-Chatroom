@@ -84,7 +84,6 @@ public class Login {
             @Override
             public void windowClosed(WindowEvent e) {
                 frame.dispose();
-                System.exit(0);
             }
         });
         //layout
@@ -238,14 +237,8 @@ public class Login {
                         } catch (SQLException ex) {
                             throw new RuntimeException(ex);
                         }
-                    } else {
-                        if (s1.equals("admin") && s2.equals("admin")) {
-                            User adminUser = new User("admin", "admin", -1, "prefer not to say", "test@email.com", "Imagination", "Java Island", "");
-                            Chatroom chatroom1 = new Chatroom(adminUser);
-                            chatroom1.start();
-                        } else {
-                            ErrorDialog ed = new ErrorDialog(frame, "Wrong Password Or Username does not exist!");
-                        }
+                    }else{
+                        new ErrorDialog(frame, "Wrong username or password!");
                     }
                 } catch (IOException | ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
@@ -275,30 +268,32 @@ public class Login {
 
     // Add these methods to the Login class
     private void saveRememberedUser(String username, String password) throws SQLException {
-        String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?) ON DUPLICATE KEY UPDATE username=?, password=?";
+        String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?)";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.setString(1, username);
         statement.setString(2, password);
-        statement.setString(3, username);
-        statement.setString(4, password);
         statement.executeUpdate();
+        System.out.println("Saved user");
     }
 
     private void deleteRememberedUser() throws SQLException {
-        String sql = "DELETE FROM user_remember where 1 = 1";
+        String sql = "DELETE FROM user_remember";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.executeUpdate();
+        System.out.println("Deleted user");
     }
 
     private boolean loadRememberedUser(TextField field1,TextField field2) throws SQLException {
-        String sql = "SELECT * FROM remember_users LIMIT 1";
+        String sql = "SELECT * FROM user_remember";
         PreparedStatement statement = connection.prepareStatement(sql);
         ResultSet result = statement.executeQuery();
         if (result.next()) {
             field1.setText(result.getString("username"));
             field2.setText(result.getString("password"));
+            System.out.println("Loaded user");
             return true;
         }
+        System.out.println("No remembered user");
         return false;
     }
 

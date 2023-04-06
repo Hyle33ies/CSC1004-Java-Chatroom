@@ -71,7 +71,7 @@ public class Server {
                             String username = message.getSender();
                             String password = message.getContent();
                             User user;
-                            System.out.println("point1");
+//                            System.out.println("point1");
                             Message responseMessage = new Message();
                             if ((user = checkUser(username, password)) != null) {
                                 responseMessage.setMesType(MessageType.MESSAGE_LOGIN_SUCCESSFUL);
@@ -160,6 +160,7 @@ public class Server {
             user.setCountry(resultSet.getString("country"));
             user.setCity(resultSet.getString("city"));
             user.setIntro(resultSet.getString("introduction"));
+            System.out.println("User Verified: " + user);
             return user;
         }
 

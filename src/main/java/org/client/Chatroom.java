@@ -30,6 +30,7 @@ public class Chatroom extends JFrame{
 
     private JFrame mainFrame;
     private JList<User> friendsList;
+    private ArrayList<UserConnection> friendsListConnection;
     private DefaultListModel<User> friendsListModel = new DefaultListModel<>();
     private JScrollPane messageScrollPane;
     private JTextPane messagePane;
@@ -41,12 +42,10 @@ public class Chatroom extends JFrame{
     private Socket socket;
     private ObjectInputStream input;
     private ObjectOutputStream output;
-    private List<UserConnection> userConnections;
 
 
     public Chatroom(User current_user) {
         this.current_user = current_user;
-        this.userConnections = new ArrayList<>();
         System.out.println("Current user: " + current_user.getUsername());
     }
 
@@ -196,7 +195,8 @@ public class Chatroom extends JFrame{
 
                 Message responseMessage = (Message) input.readObject();
                 if (responseMessage.getMesType().equals(MessageType.MESSAGE_RET_ONLINE_FRIEND)) {
-                    List<UserConnection> onlineFriends = responseMessage.getUserList();
+                    ArrayList<UserConnection> onlineFriends = responseMessage.getUserList();
+                    friendsListConnection = onlineFriends;//update the connection list
                     updateFriendsList(onlineFriends, current_user.getUsername());
                 }
             } catch (IOException | ClassNotFoundException ex) {
@@ -229,19 +229,43 @@ public class Chatroom extends JFrame{
 
         //look up user's information
         showUserInfoItem.addActionListener(e -> {
-            // Show a dialog with user information
-            JDialog userInfoDialog = new JDialog(mainFrame, "User Information", true);
-            userInfoDialog.setLayout(new GridLayout(6, 1));
-            userInfoDialog.add(new JLabel("Username: "));
-            userInfoDialog.add(new JLabel("Age: "));
-            userInfoDialog.add(new JLabel("Sex: "));
-            userInfoDialog.add(new JLabel("Country: "));
-            userInfoDialog.add(new JLabel("City: "));
-            userInfoDialog.add(new JLabel("Introduction: "));
-            userInfoDialog.pack();
-            userInfoDialog.setLocationRelativeTo(mainFrame);
-            userInfoDialog.setVisible(true);
+            // Get the selected user from the friends list
+            User selectedUser = friendsList.getSelectedValue();
+            if (selectedUser != null) {
+                // Search for the User in the ArrayList
+                UserConnection userConnection = friendsListConnection.stream()
+                        .filter(con -> con.getUser().getUsername().equals(selectedUser.getUsername()))
+                        .findFirst().orElse(null);
+
+                if (userConnection != null) {
+                    User user = userConnection.getUser();
+                    // Show a dialog with user information
+                    JDialog userInfoDialog = new JDialog(mainFrame, "User Information", true);
+                    userInfoDialog.setLayout(new GridLayout(6, 2));
+
+                    userInfoDialog.add(new JLabel("Username: "));
+                    userInfoDialog.add(new JLabel(user.getUsername()));
+                    userInfoDialog.add(new JLabel("Age: "));
+                    userInfoDialog.add(new JLabel(String.valueOf(user.getAge())));
+                    userInfoDialog.add(new JLabel("Sex: "));
+                    userInfoDialog.add(new JLabel(user.getSex()));
+                    userInfoDialog.add(new JLabel("Country: "));
+                    userInfoDialog.add(new JLabel(user.getCountry()));
+                    userInfoDialog.add(new JLabel("City: "));
+                    userInfoDialog.add(new JLabel(user.getCity()));
+                    userInfoDialog.add(new JLabel("Introduction: "));
+                    userInfoDialog.add(new JLabel(user.getIntro()));
+
+                    userInfoDialog.pack();
+                    userInfoDialog.setLocationRelativeTo(mainFrame);
+                    userInfoDialog.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(mainFrame, "User not found in the friends list connection.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         });
+
+
         friendsList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -484,14 +508,11 @@ public class Chatroom extends JFrame{
         private final JTextField cityField;
         private final JTextField introField;
         private final JButton updateButton;
-        private final User currentUser;
-        private final Chatroom mainClassReference;
 
         public UpdateProfileDialog(JFrame owner, User currentUser, Chatroom mainClassReference) {
             super(owner, "Update Profile", false);
             setLayout(new GridLayout(6, 2));
 
-            this.currentUser = currentUser;
 
             ageField = new JTextField(10);
             sexField = new JTextField(10);
@@ -517,7 +538,6 @@ public class Chatroom extends JFrame{
             add(new JLabel("Introduction:"));
             add(introField);
             add(updateButton);
-            this.mainClassReference = mainClassReference;
 
             updateButton.addActionListener(e -> {
                 String ageText = ageField.getText().trim();
@@ -588,25 +608,4 @@ public class Chatroom extends JFrame{
             e.printStackTrace();
         }
     }
-
-    private void updateUserConnections(String[] onlineFriends) {
-        userConnections.clear();
-        for (String friend : onlineFriends) {
-            String[] friendInfo = friend.split(":");
-            String username = friendInfo[0];
-            int age = Integer.parseInt(friendInfo[1]);
-            String sex = friendInfo[2];
-            String email = friendInfo[3];
-            String country = friendInfo[4];
-            String city = friendInfo[5];
-            String intro = friendInfo[6];
-            String ipAddress = friendInfo[7];
-            int port = Integer.parseInt(friendInfo[8]);
-
-            User user = new User(username, "", age, sex, email, country, city, intro);
-            userConnections.add(new UserConnection(user, ipAddress, port));
-        }
-    }
 }
-
-
