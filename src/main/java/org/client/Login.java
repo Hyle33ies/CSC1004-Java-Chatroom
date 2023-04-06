@@ -228,9 +228,9 @@ public class Login {
                         Chatroom chatroom = new Chatroom(loginUser);
                         chatroom.start();
                         frame.setVisible(false);
-
                         try {
                             if (checkbox.getState()) {
+                                deleteRememberedUser();
                                 saveRememberedUser(s1, s2);
                             } else {
                                 deleteRememberedUser();
@@ -285,7 +285,7 @@ public class Login {
     }
 
     private void deleteRememberedUser() throws SQLException {
-        String sql = "DELETE FROM user_remember";
+        String sql = "DELETE FROM user_remember where 1 = 1";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.executeUpdate();
     }
