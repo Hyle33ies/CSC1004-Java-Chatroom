@@ -135,16 +135,11 @@ public class Login {
         Checkbox checkbox = new Checkbox("remember me");
         checkbox.setBounds(390, 140, 100, 50);
         frame.add(checkbox);
-        User rememberedUser;
         try {
-            rememberedUser = loadRememberedUser();
+            boolean rememberedUserExists = loadRememberedUser(field1,field2);
+            checkbox.setState(rememberedUserExists);
         } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-        if (rememberedUser != null) {
-            field1.setText(rememberedUser.getUsername());
-            field2.setText(rememberedUser.getPasswd());
-            checkbox.setState(true);
+            ex.printStackTrace();
         }
         //Menubar
         MenuBar bar = new MenuBar();
@@ -220,15 +215,33 @@ public class Login {
                 // Verify the user's password!
                 String s1 = field1.getText(); // Username
                 String s2 = field2.getText(); // Password
-                User loginUser = new User();
-                boolean ifOK;
+                Message messageLogin = new Message();
+                messageLogin.setSender(s1);
+                messageLogin.setMesType(MessageType.MESSAGE_LOGIN_ATTEMPT);
+                messageLogin.setContent(s2);
+                //send message to server
                 try {
-                    ifOK = checkUsers(s1, s2, loginUser);
-                } catch (SQLException | ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
+                    ObjectOutputStream oos;
+                    try (Socket socket = new Socket("localhost", 8889)) {
+                        oos = new ObjectOutputStream(socket.getOutputStream());
+                    }
+                    oos.writeObject(messageLogin);
+                    oos.flush();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                //receive message from server
+                Message messageLogin1 = new Message();
+                try {
+                    Socket socket = new Socket("localhost", 8889);
+                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                    messageLogin1 = (Message) ois.readObject();
+                } catch (IOException | ClassNotFoundException ex) {
+                    ex.printStackTrace();
                 }
 
-                if (ifOK) {
+                if (messageLogin1.getMesType().equals(MessageType.MESSAGE_LOGIN_SUCCESSFUL)) {
+                    User loginUser = messageLogin1.getUser();
                     Chatroom chatroom = new Chatroom(loginUser);
                     chatroom.start();
                     frame.setVisible(false);
@@ -253,64 +266,6 @@ public class Login {
                 }
             }
         });
-    }
-    static boolean checkUsers(String username, String password, User login_user) throws SQLException, ClassNotFoundException {
-        boolean ifOK = checkUsers(username,password,login_user,true);
-        if(!ifOK) return false;
-        try {
-            Socket socket = new Socket("localhost", 8889);
-            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-
-            Message message = new Message();
-            message.setSender(username);
-            message.setContent(password);
-            message.setMesType(MessageType.MESSAGE_LOGIN_ATTEMPT);
-
-            oos.writeObject(message);
-            oos.flush();
-
-            Message response = (Message) ois.readObject();
-
-            if (MessageType.MESSAGE_LOGIN_SUCCESSFUL.equals(response.getMesType())) {
-                login_user.setUsername(username);
-                login_user.setPasswd(password);
-                // Set other user fields based on the response
-                ifOK = true;
-            }
-
-            oos.close();
-            ois.close();
-            socket.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ifOK;
-    }
-
-    @SuppressWarnings("all")
-    static boolean checkUsers(String username, String password, User login_user, boolean isOld) throws SQLException, ClassNotFoundException {
-//        DriverManager.registerDriver(new Driver());
-        isOld = true;
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
-        String sql = "select * from users where username = ? and password = ?";
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.setObject(1, username);
-        statement.setObject(2, password);
-        ResultSet result = statement.executeQuery();
-        if (result.next()) {
-            login_user.setUsername(username);
-            login_user.setPasswd(password);
-            login_user.setAge(result.getInt(4));
-            login_user.setSex(result.getString(5));
-            login_user.setEmail(result.getString(6));
-            login_user.setCountry(result.getString(7));
-            login_user.setCity(result.getString(8));
-            login_user.setIntro(result.getString(9));
-            return true;
-        }
-        return false;
     }
 
     static class ErrorDialog extends JDialog {
@@ -345,18 +300,21 @@ public class Login {
     }
 
     private void deleteRememberedUser() throws SQLException {
-        String sql = "DELETE FROM user_remember";
+        String sql = "DELETE * FROM user_remember";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.executeUpdate();
     }
 
-    private User loadRememberedUser() throws SQLException {
+    private boolean loadRememberedUser(TextField field1,TextField field2) throws SQLException {
         String sql = "SELECT * FROM user_remember LIMIT 1";
         PreparedStatement statement = connection.prepareStatement(sql);
         ResultSet result = statement.executeQuery();
         if (result.next()) {
-            return new User(result.getString("username"), result.getString("password"));
+            field1.setText(result.getString("username"));
+            field2.setText(result.getString("password"));
+            return true;
         }
-        return null;
+        return false;
     }
+
 }

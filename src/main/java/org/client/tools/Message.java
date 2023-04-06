@@ -1,6 +1,9 @@
 package org.client.tools;
 
+import org.server.UserConnection;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * User: HP
@@ -12,15 +15,17 @@ public class Message implements Serializable {
     private String sender;
     private String getter;
     private String content;
+    private String mesType = MessageType.MESSAGE_LOGIN_FAILURE;
+    private User user;
+    private ArrayList<UserConnection> userList;
     private String sendTime;
-    private String mesType;
 
-    public String getMesType() {
-        return mesType;
+    public String getSendTime() {
+        return sendTime;
     }
 
-    public void setMesType(String mesType) {
-        this.mesType = mesType;
+    public void setSendTime(String sendTime) {
+        this.sendTime = sendTime;
     }
 
     public String getSender() {
@@ -47,11 +52,27 @@ public class Message implements Serializable {
         this.content = content;
     }
 
-    public String getSendTime() {
-        return sendTime;
+    public String getMesType() {
+        return mesType;
     }
 
-    public void setSendTime(String sendTime) {
-        this.sendTime = sendTime;
+    public void setMesType(String mesType) {
+        this.mesType = mesType;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public ArrayList<UserConnection> getUserList() {
+        return userList;
+    }
+
+    public void setUserList(ArrayList<UserConnection> userList) {
+        this.userList = userList;
     }
 }

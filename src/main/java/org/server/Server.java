@@ -1,28 +1,25 @@
 package org.server;
 
 import org.client.tools.MessageType;
-import org.client.tools.Message;
 import org.client.tools.User;
+import org.client.tools.Message;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
     private final int PORT = 8889;
     private Connection connection;
-    private Map<String, UserConnection> connectedUsers;
+    private List<UserConnection> connectedUsers;
     private ExecutorService threadPool;
 
     public static void main(String[] args) {
@@ -30,18 +27,19 @@ public class Server {
     }
 
     public void start() {
-        connectedUsers = new ConcurrentHashMap<>();
+        connectedUsers = Collections.synchronizedList(new ArrayList<>());
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
             threadPool = Executors.newCachedThreadPool();
-            ServerSocket serverSocket = new ServerSocket(PORT);
-            System.out.println("Server started on port " + PORT);
+            try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+                System.out.println("Server started on port " + PORT);
 
-            while (true) {
-                Socket socket = serverSocket.accept();
-                System.out.println("IP: " + socket.getInetAddress().getHostAddress() + " port: " + socket.getPort() + " trying to connect");
-                threadPool.execute(new ClientHandler(socket));
+                while (true) {
+                    Socket socket = serverSocket.accept();
+                    System.out.println("IP: " + socket.getInetAddress().getHostAddress() + " port: " + socket.getPort() + " trying to connect");
+                    threadPool.execute(new ClientHandler(socket));
+                }
             }
         } catch (IOException | ClassNotFoundException | SQLException e) {
             e.printStackTrace();
@@ -65,35 +63,38 @@ public class Server {
 
                 Message message = (Message) inputStream.readObject();
 
-                if (message.getMesType().equals(MessageType.MESSAGE_LOGIN_ATTEMPT)) {
-                    String username = message.getSender();
-                    String password = message.getContent();
-
-                    boolean loginResult = checkUser(username, password);
-                    Message responseMessage = new Message();
-
-                    if (loginResult) {
-                        responseMessage.setMesType(MessageType.MESSAGE_LOGIN_SUCCESSFUL);
-                        User user = new User();
-                        user.setUsername(username);
-                        connectedUsers.put(username, new UserConnection(user, socket.getInetAddress().getHostAddress(), socket.getPort()));
-                    } else {
-                        responseMessage.setMesType(MessageType.MESSAGE_LOGIN_FAILURE);
+                while (message != null) {
+                    if (message.getMesType().equals(MessageType.MESSAGE_LOGIN_ATTEMPT)) {
+                        String username = message.getSender();
+                        String password = message.getContent();
+                        User user;
+                        Message responseMessage = new Message();
+                        if ((user = checkUser(username, password)) != null) {
+                            responseMessage.setMesType(MessageType.MESSAGE_LOGIN_SUCCESSFUL);
+                            responseMessage.setUser(user);
+                            connectedUsers.add(new UserConnection(user, socket.getInetAddress().getHostAddress(), socket.getPort()));
+                        } else {
+                            responseMessage.setMesType(MessageType.MESSAGE_LOGIN_FAILURE);
+                        }
+                        outputStream.writeObject(responseMessage);
+                    } else if (message.getMesType().equals(MessageType.MESSAGE_GET_ONLINE_FRIEND)) {
+                        sendOnlineFriendsList(message.getSender(), outputStream);
                     }
-
-                    outputStream.writeObject(responseMessage);
-                } else if (message.getMesType().equals(MessageType.MESSAGE_CLIENT_EXIT)) {
-                    String username1 = message.getSender();
-                    connectedUsers.remove(username1);
-                    System.out.println("User '" + username1 + "' exited.");
+                    message = (Message) inputStream.readObject();
                 }
-                // Here you can add more message types for multi-user chat and file transmission.
+
+                String username = message.getSender();
+                connectedUsers.removeIf(userConnection -> userConnection.getUser().getUsername().equals(username));
+                System.out.println("User '" + username + "' exited.");
 
             } catch (IOException | ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
             } finally {
                 try {
                     if (outputStream != null) outputStream.close();
+                    if (inputStream != null) if (outputStream != null) {
+                        outputStream.close();
+                    }
                     if (inputStream != null) inputStream.close();
                     if (socket != null) socket.close();
                 } catch (IOException e) {
@@ -101,51 +102,39 @@ public class Server {
                 }
             }
         }
+    }
 
-        private boolean checkUser(String username, String password) throws SQLException {
-            String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setString(1, username);
-            statement.setString(2, password);
-            ResultSet resultSet = statement.executeQuery();
+    private void sendOnlineFriendsList(String requesterUsername, ObjectOutputStream outputStream) throws IOException {
+        Message onlineFriendsMessage = new Message();
+        onlineFriendsMessage.setMesType(MessageType.MESSAGE_RET_ONLINE_FRIEND);
 
-            return resultSet.next();
+        ArrayList<UserConnection> onlineFriends = new ArrayList<>(connectedUsers);
+        onlineFriends.removeIf(userConnection -> userConnection.getUser().getUsername().equals(requesterUsername));
+
+        onlineFriendsMessage.setUserList(onlineFriends);
+        outputStream.writeObject(onlineFriendsMessage);
+    }
+
+    private User checkUser(String username, String password) throws SQLException {
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setString(1, username);
+        statement.setString(2, password);
+        ResultSet resultSet = statement.executeQuery();
+
+        if (resultSet.next()) {
+            User user = new User();
+            user.setUsername(resultSet.getString("username"));
+            user.setPasswd(resultSet.getString("password"));
+            user.setAge(resultSet.getInt("age"));
+            user.setSex(resultSet.getString("sex"));
+            user.setEmail(resultSet.getString("email"));
+            user.setCountry(resultSet.getString("country"));
+            user.setCity(resultSet.getString("city"));
+            user.setIntro(resultSet.getString("introduction"));
+            return user;
         }
-    }
-}
 
-class UserConnection {
-    private User user;
-    private String ipAddress;
-    private int port;
-
-    public UserConnection(User user, String ipAddress, int port) {
-        this.user = user;
-        this.ipAddress = ipAddress;
-        this.port = port;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
+        return null;
     }
 }

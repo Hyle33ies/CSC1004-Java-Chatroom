@@ -3,8 +3,13 @@ package org.client;
 import org.client.tools.Message;
 import org.client.tools.MessageType;
 import org.client.tools.User;
+import org.server.UserConnection;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -18,14 +23,14 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 
-public class Chatroom {
+public class Chatroom extends JFrame{
 
     private JFrame mainFrame;
-    private JList<String> friendsList;
-    private DefaultListModel<String> friendsListModel;
+    private JList<User> friendsList;
+    private DefaultListModel<User> friendsListModel = new DefaultListModel<>();
     private JScrollPane messageScrollPane;
     private JTextPane messagePane;
     private JTextArea messageField;
@@ -36,11 +41,22 @@ public class Chatroom {
     private Socket socket;
     private ObjectInputStream input;
     private ObjectOutputStream output;
+    private List<UserConnection> userConnections;
 
 
     public Chatroom(User current_user) {
         this.current_user = current_user;
+        this.userConnections = new ArrayList<>();
     }
+
+    @Override
+    protected void processWindowEvent(WindowEvent e) {
+        if (e.getID() == WindowEvent.WINDOW_CLOSING) {
+            sendExitMessage();
+        }
+        super.processWindowEvent(e);
+    }
+
 
     private void connectToServer(String serverAddress, int serverPort) {
         try {
@@ -55,7 +71,6 @@ public class Chatroom {
 
     protected void start() {
         mainFrame = new JFrame("Chat Application");
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setSize(800, 600);
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setAlwaysOnTop(true);
@@ -71,7 +86,7 @@ public class Chatroom {
         mainFrame.setJMenuBar(menuBar);
 
         JMenu actionsMenu = new JMenu("Actions");
-
+/*
         // Add a Friend menu item
         JMenuItem addFriendMenuItem = new JMenuItem("Add a Friend");
         addFriendMenuItem.addActionListener(e -> {
@@ -83,13 +98,23 @@ public class Chatroom {
                 friendsListModel.addElement(newUser);
             }
         });
-        actionsMenu.add(addFriendMenuItem);
-
+ */
+        JMenuItem newUserLoginItem = new JMenuItem("New User Login");
+        actionsMenu.add(newUserLoginItem);
+        newUserLoginItem.addActionListener(e -> {
+            try {
+                Login newLogin = new Login();
+                newLogin.start();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
         // Exit menu item
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
             if (result == JOptionPane.YES_OPTION) {
+                sendExitMessage();
                 System.exit(0);
             }
         });
@@ -142,6 +167,8 @@ public class Chatroom {
         JLabel friendsListTitle = new JLabel("FRIENDS");
         friendsListTitle.setHorizontalAlignment(SwingConstants.CENTER);
         friendsPanel.add(friendsListTitle, BorderLayout.NORTH);
+/*
+    Former "Add User" button, not used anymore!
 
         JButton addUserButton = new JButton("Add User");
         friendsPanel.add(addUserButton, BorderLayout.SOUTH);
@@ -156,16 +183,41 @@ public class Chatroom {
                 friendsListModel.addElement(newUser);
             }
         });
+*/
+        JButton getOnlineFriendsButton = new JButton("Get Online Friends");
+        friendsPanel.add(getOnlineFriendsButton, BorderLayout.SOUTH);
+        getOnlineFriendsButton.addActionListener(e -> {
+            try {
+                Message getOnlineFriendsMessage = new Message();
+                getOnlineFriendsMessage.setMesType(MessageType.MESSAGE_GET_ONLINE_FRIEND);
+                getOnlineFriendsMessage.setSender(current_user.getUsername());
+                output.writeObject(getOnlineFriendsMessage);
+
+                Message responseMessage = (Message) input.readObject();
+                if (responseMessage.getMesType().equals(MessageType.MESSAGE_RET_ONLINE_FRIEND)) {
+                    List<UserConnection> onlineFriends = responseMessage.getUserList();
+                    updateFriendsList(onlineFriends, current_user.getUsername());
+                }
+            } catch (IOException | ClassNotFoundException ex) {
+                ex.printStackTrace();
+            }
+        });
 
 
         // Friends list
         friendsListModel = new DefaultListModel<>();
-        friendsListModel.addElement("User1");
-        friendsListModel.addElement("User2");
-        friendsListModel.addElement("User3");
 
         friendsList = new JList<>(friendsListModel);
         friendsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        friendsList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                User user = (User) value;
+                String displayText = user.getUsername(); // You can customize the display text to include more information about the user
+                return super.getListCellRendererComponent(list, displayText, index, isSelected, cellHasFocus);
+            }
+        });
+
 
         JScrollPane friendsScrollPane = new JScrollPane(friendsList);
         friendsScrollPane.setPreferredSize(new Dimension(200, 0));
@@ -195,14 +247,16 @@ public class Chatroom {
                 friendsList.requestFocusInWindow(); // Add this line
                 if (e.getClickCount() == 2) {
                     // Show chat panel with selected user
-                    String selectedUser = friendsList.getSelectedValue();
-                    chatWithLabel.setText("Chat with: " + selectedUser);
-                    showChatPaneForUser(selectedUser);
+                    User selectedUser = friendsList.getSelectedValue();
+                    String selectedUsername = selectedUser != null ? selectedUser.getUsername() : null;
+                    chatWithLabel.setText("Chat with: " + selectedUsername);
+                    showChatPaneForUser(selectedUsername);
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     userInfoMenu.show(friendsList, e.getX(), e.getY());
                 }
             }
         });
+
 
         friendsListPanel.add(friendsScrollPane, BorderLayout.CENTER);
         friendsPanel.add(friendsScrollPane, BorderLayout.CENTER);
@@ -340,8 +394,14 @@ public class Chatroom {
             return;
         }
 
-        String selectedUser = friendsList.getSelectedValue();
-        JTextPane chatPane = userChatPanes.get(selectedUser);
+        User selectedUser = friendsList.getSelectedValue();
+        String selectedUsername = selectedUser != null ? selectedUser.getUsername() : null;
+        if (selectedUsername == null) {
+            showWarningMessage("Please select a friend before sending a message.");
+            return;
+        }
+
+        JTextPane chatPane = userChatPanes.get(selectedUser.getUsername());
 
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -350,11 +410,23 @@ public class Chatroom {
         // Create a Message object
         Message msg = new Message();
         msg.setSender(current_user.getUsername());
-        msg.setGetter(selectedUser);
+        msg.setGetter(selectedUsername);
         msg.setContent(message);
         msg.setSendTime(sendTime);
-        msg.setMesType("3");
-        String formattedMessage = "<font color=\"blue\"><b>admin [" + now.format(formatter) + "]:</b></font> " + message.replace("\n", "<br>") + "<br>";
+        msg.setMesType(MessageType.MESSAGE_COMM_MES);
+
+        // Send the message to the server
+        try {
+            output.writeObject(msg);
+            output.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showWarningMessage("Failed to send the message. Please try again.");
+            return;
+        }
+
+        // Update the local chat pane
+        String formattedMessage = "<font color=\"blue\"><b>" + current_user.getUsername() + " [" + now.format(formatter) + "]:</b></font> " + message.replace("\n", "<br>") + "<br>";
         chatPane.setContentType("text/html");
         String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
         chatPane.setText(currentText + formattedMessage + "</body></html>");
@@ -364,6 +436,8 @@ public class Chatroom {
         messageField.setWrapStyleWord(true);
     }
 
+
+@Deprecated
     static class AddUserDialog extends JDialog {
         private final JTextField userNameField;
         private final JTextField ipAddressField;
@@ -411,8 +485,6 @@ public class Chatroom {
         private final JButton updateButton;
         private final User currentUser;
         private final Chatroom mainClassReference;
-
-
 
         public UpdateProfileDialog(JFrame owner, User currentUser, Chatroom mainClassReference) {
             super(owner, "Update Profile", false);
@@ -495,6 +567,45 @@ public class Chatroom {
         }
     }
 
+    private void updateFriendsList(List<UserConnection> onlineFriends, String currentUser) {
+        friendsListModel.clear();
+        for (UserConnection userConnection : onlineFriends) {
+            User friend = userConnection.getUser();
+            if (!friend.getUsername().equals(currentUser)) {
+                friendsListModel.addElement(friend);
+            }
+        }
+    }
+
+    private void showWarningMessage(String message) {
+        StyledDocument document = messagePane.getStyledDocument();
+        SimpleAttributeSet attrs = new SimpleAttributeSet();
+        StyleConstants.setForeground(attrs, Color.RED);
+        try {
+            document.insertString(document.getLength(), message + "\n", attrs);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateUserConnections(String[] onlineFriends) {
+        userConnections.clear();
+        for (String friend : onlineFriends) {
+            String[] friendInfo = friend.split(":");
+            String username = friendInfo[0];
+            int age = Integer.parseInt(friendInfo[1]);
+            String sex = friendInfo[2];
+            String email = friendInfo[3];
+            String country = friendInfo[4];
+            String city = friendInfo[5];
+            String intro = friendInfo[6];
+            String ipAddress = friendInfo[7];
+            int port = Integer.parseInt(friendInfo[8]);
+
+            User user = new User(username, "", age, sex, email, country, city, intro);
+            userConnections.add(new UserConnection(user, ipAddress, port));
+        }
+    }
 }
 
 
