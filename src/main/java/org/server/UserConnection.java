@@ -2,15 +2,27 @@ package org.server;
 
 import org.client.tools.User;
 
+import java.io.Serializable;
+
 /**
  * User: HP
  * Date: 2023/4/6
  * WELCOME!
  */
-public class UserConnection {
+public class UserConnection implements Serializable {
+    public static final long serialVersionUID = 1L;
     private User user;
     private String ipAddress;
     private int port;
+
+    @Override
+    public String toString() {
+        return "UserConnection{" +
+                "user=" + user +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", port=" + port +
+                '}';
+    }
 
     public UserConnection(User user, String ipAddress, int port) {
         this.user = user;

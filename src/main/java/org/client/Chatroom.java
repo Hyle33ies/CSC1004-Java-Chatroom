@@ -47,6 +47,7 @@ public class Chatroom extends JFrame{
     public Chatroom(User current_user) {
         this.current_user = current_user;
         this.userConnections = new ArrayList<>();
+        System.out.println("Current user: " + current_user.getUsername());
     }
 
     @Override
@@ -115,7 +116,7 @@ public class Chatroom extends JFrame{
             int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
             if (result == JOptionPane.YES_OPTION) {
                 sendExitMessage();
-                System.exit(0);
+                mainFrame.dispose();
             }
         });
         actionsMenu.add(exitMenuItem);
@@ -362,7 +363,7 @@ public class Chatroom extends JFrame{
                 int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
                     sendExitMessage();
-                    System.exit(0);
+                    mainFrame.dispose();
                 }
             }
         });

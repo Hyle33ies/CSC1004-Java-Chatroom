@@ -4,11 +4,13 @@ import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.client.tools.Message;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,11 +36,11 @@ public class Server {
             threadPool = Executors.newCachedThreadPool();
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("Server started on port " + PORT);
-
                 while (true) {
                     Socket socket = serverSocket.accept();
                     System.out.println("IP: " + socket.getInetAddress().getHostAddress() + " port: " + socket.getPort() + " trying to connect");
                     threadPool.execute(new ClientHandler(socket));
+                    System.out.println("Client connected.");
                 }
             }
         } catch (IOException | ClassNotFoundException | SQLException e) {
@@ -47,7 +49,7 @@ public class Server {
     }
 
     class ClientHandler implements Runnable {
-        private Socket socket;
+        private final Socket socket;
         private ObjectOutputStream outputStream;
         private ObjectInputStream inputStream;
 
@@ -62,30 +64,55 @@ public class Server {
                 inputStream = new ObjectInputStream(socket.getInputStream());
 
                 Message message = (Message) inputStream.readObject();
-
-                while (message != null) {
-                    if (message.getMesType().equals(MessageType.MESSAGE_LOGIN_ATTEMPT)) {
-                        String username = message.getSender();
-                        String password = message.getContent();
-                        User user;
-                        Message responseMessage = new Message();
-                        if ((user = checkUser(username, password)) != null) {
-                            responseMessage.setMesType(MessageType.MESSAGE_LOGIN_SUCCESSFUL);
-                            responseMessage.setUser(user);
-                            connectedUsers.add(new UserConnection(user, socket.getInetAddress().getHostAddress(), socket.getPort()));
-                        } else {
-                            responseMessage.setMesType(MessageType.MESSAGE_LOGIN_FAILURE);
+                try {
+                    while (true) {
+                        System.out.println("Message received: " + message.getMesType());
+                        if (message.getMesType().equals(MessageType.MESSAGE_LOGIN_ATTEMPT)) {
+                            String username = message.getSender();
+                            String password = message.getContent();
+                            User user;
+                            System.out.println("point1");
+                            Message responseMessage = new Message();
+                            if ((user = checkUser(username, password)) != null) {
+                                responseMessage.setMesType(MessageType.MESSAGE_LOGIN_SUCCESSFUL);
+                                responseMessage.setUser(user);
+                                connectedUsers.add(new UserConnection(user, socket.getInetAddress().getHostAddress(), socket.getPort()));
+                                System.out.println(connectedUsers);
+                            } else {
+                                responseMessage.setMesType(MessageType.MESSAGE_LOGIN_FAILURE);
+                            }
+                            outputStream.writeObject(responseMessage);
                         }
-                        outputStream.writeObject(responseMessage);
-                    } else if (message.getMesType().equals(MessageType.MESSAGE_GET_ONLINE_FRIEND)) {
-                        sendOnlineFriendsList(message.getSender(), outputStream);
+                        else if (message.getMesType().equals(MessageType.MESSAGE_GET_ONLINE_FRIEND)) {
+                            sendOnlineFriendsList(message.getSender(), outputStream);
+                        }
+                        else if (message.getMesType().equals(MessageType.MESSAGE_CLIENT_EXIT)){
+                            Message finalMessage = message;
+                            connectedUsers.removeIf(userConnection -> userConnection.getUser().getUsername().equals(finalMessage.getSender()));
+                            System.out.println(connectedUsers);
+                        }
+//                        else if (message.getMesType().equals(MessageType.MESSAGE_COMM_MES)){
+//                            String receiver = message.getReceiver();
+//                            for (UserConnection userConnection : connectedUsers) {
+//                                if (userConnection.getUser().getUsername().equals(receiver)) {
+//                                    Socket socket = new Socket(userConnection.getIp(), userConnection.getPort());
+//                                    ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+//                                    outputStream.writeObject(message);
+//                                    outputStream.close();
+//                                    socket.close();
+//                                    break;
+//                                }
+//                            }
+//                        }
+                        message = (Message) inputStream.readObject();
                     }
-                    message = (Message) inputStream.readObject();
+                } catch (EOFException | SocketException e) {
+                    // Connection was closed or reset; handle cleanup here
+                    System.out.println("Client disconnected.");
+                } catch (IOException | ClassNotFoundException e) {
+                    // Other errors occurred while reading data
+                    e.printStackTrace();
                 }
-
-                String username = message.getSender();
-                connectedUsers.removeIf(userConnection -> userConnection.getUser().getUsername().equals(username));
-                System.out.println("User '" + username + "' exited.");
 
             } catch (IOException | ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
@@ -111,6 +138,7 @@ public class Server {
         ArrayList<UserConnection> onlineFriends = new ArrayList<>(connectedUsers);
         onlineFriends.removeIf(userConnection -> userConnection.getUser().getUsername().equals(requesterUsername));
 
+        System.out.println("Online friends: " + onlineFriends);
         onlineFriendsMessage.setUserList(onlineFriends);
         outputStream.writeObject(onlineFriendsMessage);
     }

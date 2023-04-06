@@ -79,7 +79,6 @@ public class Login {
             @Override
             public void windowClosing(WindowEvent e) {
                 frame.dispose();
-                System.exit(0);
             }
 
             @Override
@@ -136,7 +135,7 @@ public class Login {
         checkbox.setBounds(390, 140, 100, 50);
         frame.add(checkbox);
         try {
-            boolean rememberedUserExists = loadRememberedUser(field1,field2);
+            boolean rememberedUserExists = loadRememberedUser(field1, field2);
             checkbox.setState(rememberedUserExists);
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -188,15 +187,12 @@ public class Login {
                     popMenu.show(frame, e.getX(), e.getY());
             }
         });
-        menuReadMePop.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    File readmeFile = Paths.get("resources", "readme.md").toFile();
-                    Desktop.getDesktop().open(readmeFile);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+        menuReadMePop.addActionListener(e -> {
+            try {
+                File readmeFile = Paths.get("resources", "readme.md").toFile();
+                Desktop.getDesktop().open(readmeFile);
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         });
         frame.add(popMenu);
@@ -220,54 +216,43 @@ public class Login {
                 messageLogin.setMesType(MessageType.MESSAGE_LOGIN_ATTEMPT);
                 messageLogin.setContent(s2);
                 //send message to server
-                try {
-                    ObjectOutputStream oos;
-                    try (Socket socket = new Socket("localhost", 8889)) {
-                        oos = new ObjectOutputStream(socket.getOutputStream());
-                    }
+                try (Socket socket = new Socket("localhost", 8889)) {
+                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                     oos.writeObject(messageLogin);
                     oos.flush();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-                //receive message from server
-                Message messageLogin1 = new Message();
-                try {
-                    Socket socket = new Socket("localhost", 8889);
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                    messageLogin1 = (Message) ois.readObject();
-                } catch (IOException | ClassNotFoundException ex) {
-                    ex.printStackTrace();
-                }
+                    //receive message from server
+                    Message messageLogin1 = (Message) ois.readObject();
+                    if (messageLogin1.getMesType().equals(MessageType.MESSAGE_LOGIN_SUCCESSFUL)) {
+                        User loginUser = messageLogin1.getUser();
+                        Chatroom chatroom = new Chatroom(loginUser);
+                        chatroom.start();
+                        frame.setVisible(false);
 
-                if (messageLogin1.getMesType().equals(MessageType.MESSAGE_LOGIN_SUCCESSFUL)) {
-                    User loginUser = messageLogin1.getUser();
-                    Chatroom chatroom = new Chatroom(loginUser);
-                    chatroom.start();
-                    frame.setVisible(false);
-
-                    try {
-                        if (checkbox.getState()) {
-                            saveRememberedUser(s1, s2);
-                        } else {
-                            deleteRememberedUser();
+                        try {
+                            if (checkbox.getState()) {
+                                saveRememberedUser(s1, s2);
+                            } else {
+                                deleteRememberedUser();
+                            }
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
                         }
-                    } catch (SQLException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                } else {
-                    if (s1.equals("admin") && s2.equals("admin")) {
-                        User adminUser = new User("admin", "admin", -1, "prefer not to say", "test@email.com", "Imagination", "Java Island", "");
-                        Chatroom chatroom1 = new Chatroom(adminUser);
-                        chatroom1.start();
                     } else {
-                        ErrorDialog ed = new ErrorDialog(frame, "Wrong Password Or Username does not exist!");
+                        if (s1.equals("admin") && s2.equals("admin")) {
+                            User adminUser = new User("admin", "admin", -1, "prefer not to say", "test@email.com", "Imagination", "Java Island", "");
+                            Chatroom chatroom1 = new Chatroom(adminUser);
+                            chatroom1.start();
+                        } else {
+                            ErrorDialog ed = new ErrorDialog(frame, "Wrong Password Or Username does not exist!");
+                        }
                     }
+                } catch (IOException | ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         });
     }
-
     static class ErrorDialog extends JDialog {
 
         public ErrorDialog(Frame parent, String message) {
@@ -300,13 +285,13 @@ public class Login {
     }
 
     private void deleteRememberedUser() throws SQLException {
-        String sql = "DELETE * FROM user_remember";
+        String sql = "DELETE FROM user_remember";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.executeUpdate();
     }
 
     private boolean loadRememberedUser(TextField field1,TextField field2) throws SQLException {
-        String sql = "SELECT * FROM user_remember LIMIT 1";
+        String sql = "SELECT * FROM remember_users LIMIT 1";
         PreparedStatement statement = connection.prepareStatement(sql);
         ResultSet result = statement.executeQuery();
         if (result.next()) {
