@@ -8,6 +8,8 @@ import java.io.Serializable;
  * User: HP
  * Date: 2023/4/6
  * WELCOME!
+ * This class is to maintain a user connection, it includes a user and its network setting
+ * Used in Chatting Socket Programming
  */
 public class UserConnection implements Serializable {
     public static final long serialVersionUID = 1L;

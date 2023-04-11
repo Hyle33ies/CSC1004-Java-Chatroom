@@ -26,7 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 
-public class Chatroom extends JFrame{
+public class Chatroom extends JFrame {
 
     private JFrame mainFrame;
     private JList<User> friendsList;
@@ -84,9 +84,9 @@ public class Chatroom extends JFrame{
         // Menu bar
         JMenuBar menuBar = new JMenuBar();
         mainFrame.setJMenuBar(menuBar);
-
+        // First Menu: Actions
         JMenu actionsMenu = new JMenu("Actions");
-/*
+    /*
         // Add a Friend menu item
         JMenuItem addFriendMenuItem = new JMenuItem("Add a Friend");
         addFriendMenuItem.addActionListener(e -> {
@@ -98,7 +98,8 @@ public class Chatroom extends JFrame{
                 friendsListModel.addElement(newUser);
             }
         });
- */
+    */
+        // new user, but do not close the current window
         JMenuItem newUserLoginItem = new JMenuItem("New User Login");
         actionsMenu.add(newUserLoginItem);
         newUserLoginItem.addActionListener(e -> {
@@ -119,14 +120,14 @@ public class Chatroom extends JFrame{
             }
         });
         actionsMenu.add(exitMenuItem);
-
+        // new window, but close the current user window
         JMenuItem switchUserMenuItem = new JMenuItem("Login with another user");
         switchUserMenuItem.addActionListener(e -> {
-            sendExitMessage();
+            sendExitMessage(); // exit the current user
             mainFrame.dispose();
             Login login;
             try {
-                login = new Login();
+                login = new Login();// new window
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
@@ -139,6 +140,7 @@ public class Chatroom extends JFrame{
         JMenu helpMenu = new JMenu("Help");
         JMenuItem aboutMenuItem = new JMenuItem("About");
         aboutMenuItem.addActionListener(e -> {
+            // open the readme file
             try {
                 File readmeFile = Paths.get("resources", "readme.md").toFile();
                 Desktop.getDesktop().open(readmeFile);
@@ -149,8 +151,7 @@ public class Chatroom extends JFrame{
         helpMenu.add(aboutMenuItem);
         menuBar.add(helpMenu);
 
-        // In the Chatroom class, inside the start() method
-
+        // update your information
         JMenuItem updateProfileMenuItem = new JMenuItem("Update Profile");
         updateProfileMenuItem.addActionListener(e -> {
             UpdateProfileDialog updateProfileDialog = new UpdateProfileDialog(mainFrame, current_user, this);
@@ -167,7 +168,7 @@ public class Chatroom extends JFrame{
         JLabel friendsListTitle = new JLabel("FRIENDS");
         friendsListTitle.setHorizontalAlignment(SwingConstants.CENTER);
         friendsPanel.add(friendsListTitle, BorderLayout.NORTH);
-/*
+    /*
     Former "Add User" button, not used anymore!
 
         JButton addUserButton = new JButton("Add User");
@@ -175,24 +176,25 @@ public class Chatroom extends JFrame{
 
         addUserButton.addActionListener(e -> {
             // Show a dialog to add a new user
-            AddUserDialog addUserDialog = new AddUserDialog(mainFrame);
-            addUserDialog.setVisible(true);
+            AddUserDialog addedUserDialog = new AddUserDialog(mainFrame);
+            addedUserDialog.setVisible(true);
 
-            String newUser = addUserDialog.getNewUserName();
+            String newUser = addedUserDialog.getNewUserName();
             if (newUser != null) {
                 friendsListModel.addElement(newUser);
             }
         });
-*/
+    */
         JButton getOnlineFriendsButton = new JButton("Get Online Friends");
         friendsPanel.add(getOnlineFriendsButton, BorderLayout.SOUTH);
         getOnlineFriendsButton.addActionListener(e -> {
             try {
+                // Send
                 Message getOnlineFriendsMessage = new Message();
                 getOnlineFriendsMessage.setMesType(MessageType.MESSAGE_GET_ONLINE_FRIEND);
                 getOnlineFriendsMessage.setSender(current_user.getUsername());
                 output.writeObject(getOnlineFriendsMessage);
-
+                // Get
                 Message responseMessage = (Message) input.readObject();
                 if (responseMessage.getMesType().equals(MessageType.MESSAGE_RET_ONLINE_FRIEND)) {
                     ArrayList<UserConnection> onlineFriends = responseMessage.getUserList();
@@ -214,20 +216,20 @@ public class Chatroom extends JFrame{
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 User user = (User) value;
-                String displayText = user.getUsername(); // You can customize the display text to include more information about the user
+                String displayText = user.getUsername(); // TODO customize the display text to include more information about the user
                 return super.getListCellRendererComponent(list, displayText, index, isSelected, cellHasFocus);
             }
         });
 
-
         JScrollPane friendsScrollPane = new JScrollPane(friendsList);
         friendsScrollPane.setPreferredSize(new Dimension(200, 0));
 
+        // The information of selected user
         JPopupMenu userInfoMenu = new JPopupMenu();
         JMenuItem showUserInfoItem = new JMenuItem("Show User Information");
         userInfoMenu.add(showUserInfoItem);
 
-        //look up user's information
+        // Look up user's information
         showUserInfoItem.addActionListener(e -> {
             // Get the selected user from the friends list
             User selectedUser = friendsList.getSelectedValue();
@@ -265,7 +267,7 @@ public class Chatroom extends JFrame{
             }
         });
 
-
+        // The "Chat with" part
         friendsList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -287,11 +289,12 @@ public class Chatroom extends JFrame{
         friendsPanel.add(friendsScrollPane, BorderLayout.CENTER);
         mainPanel.add(friendsPanel, BorderLayout.WEST);
 
-        // 3. Add About the developer menu item
+        // Add "About the developer" menu item
         JMenuItem aboutDeveloperMenuItem = new JMenuItem("About the developer");
         aboutDeveloperMenuItem.addActionListener(e -> {
             try {
                 Desktop.getDesktop().browse(new URI("https://www.example.com"));
+                // TODO update the website
             } catch (IOException | URISyntaxException ex) {
                 ex.printStackTrace();
             }
@@ -300,14 +303,14 @@ public class Chatroom extends JFrame{
 
         menuBar.add(helpMenu);
 
-        // 4. Add User menu
+        // Add User menu
         JMenu userMenu = new JMenu("User");
         JMenuItem currentUserMenuItem = new JMenuItem("Current User");
         currentUserMenuItem.addActionListener(e -> JOptionPane.showMessageDialog(mainFrame, "Username: " + current_user.getUsername() + "\nAge: " + current_user.getAge() + "\nSex: " + current_user.getSex() + "\nCountry: " + current_user.getCountry() + "\nCity: " + current_user.getCity() + "\nIntroduction: " + current_user.getIntro(), "User Information", JOptionPane.INFORMATION_MESSAGE));
         userMenu.add(currentUserMenuItem);
         menuBar.add(userMenu);
 
-        // Chat panel
+        // Biggest Part: Chat panel
         chatWithPanel = new JPanel(new BorderLayout());
         JPanel userInfoPanel = new JPanel(new BorderLayout());
         JLabel currentUserLabel = new JLabel("Current User @" + current_user.getUsername());
@@ -319,24 +322,27 @@ public class Chatroom extends JFrame{
 
         chatWithPanel.add(userInfoPanel, BorderLayout.NORTH);
 
+        // Sent Message
         messagePane = new JTextPane();
         messagePane.setEditable(false);
         messageScrollPane = new JScrollPane(messagePane);
         chatWithPanel.add(messageScrollPane, BorderLayout.CENTER);
 
+        //Typing area
         JPanel typingPanel = new JPanel(new BorderLayout());
         messageField = new JTextArea(3, 50);
         JScrollPane typingScrollPane = new JScrollPane(messageField);
         typingPanel.add(typingScrollPane, BorderLayout.CENTER);
 
+        //Submit Button
         JButton submitButton = new JButton("Submit");
         typingPanel.add(submitButton, BorderLayout.EAST);
         submitButton.addActionListener(e -> submitMessage());
         submitButton.setPreferredSize(new Dimension(80, 40));
         //Add a keyboard shortcut "ctrl + Enter" for submitButton
         submitButton.registerKeyboardAction(e -> submitMessage(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
-//        submitButton.registerKeyboardAction(e -> submitMessage(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
 
+        //TODO Send Files
         JButton sendFilesButton = new JButton("Files");
         sendFilesButton.setPreferredSize(new Dimension(80, 20));
         sendFilesButton.addActionListener(e -> {
@@ -344,14 +350,16 @@ public class Chatroom extends JFrame{
             int returnValue = fileChooser.showOpenDialog(mainFrame);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                // Perform file handling operations here
+                // TODO Perform file handling operations
             }
         });
 
+        //TODO maybe no: Emoji Function
         JButton emojiButton = new JButton("Emoji");
         emojiButton.setPreferredSize(new Dimension(80, 20));
         // Add actionListener for emojiButton here
 
+        //TODO Message History
         JButton historyButton = new JButton("History");
         historyButton.setPreferredSize(new Dimension(80, 20));
         historyButton.addActionListener(e -> {
@@ -374,7 +382,6 @@ public class Chatroom extends JFrame{
         leftButtonPanel.add(historyButton);
 
         typingPanel.add(leftButtonPanel, BorderLayout.WEST);
-
         chatWithPanel.add(typingPanel, BorderLayout.SOUTH);
 
         mainPanel.add(chatWithPanel, BorderLayout.CENTER);
@@ -462,7 +469,8 @@ public class Chatroom extends JFrame{
     }
 
 
-@Deprecated
+    @Deprecated
+    // No more needed, used to add a friend manually
     static class AddUserDialog extends JDialog {
         private final JTextField userNameField;
         private final JTextField ipAddressField;
@@ -507,19 +515,17 @@ public class Chatroom extends JFrame{
         private final JTextField countryField;
         private final JTextField cityField;
         private final JTextField introField;
-        private final JButton updateButton;
 
         public UpdateProfileDialog(JFrame owner, User currentUser, Chatroom mainClassReference) {
             super(owner, "Update Profile", false);
             setLayout(new GridLayout(6, 2));
-
-
+            // dummy codes about update your information
             ageField = new JTextField(10);
             sexField = new JTextField(10);
             countryField = new JTextField(10);
             cityField = new JTextField(10);
             introField = new JTextField(10);
-            updateButton = new JButton("Update");
+            JButton updateButton = new JButton("Update");
 
             ageField.setText(String.valueOf(currentUser.getAge()));
             sexField.setText(currentUser.getSex());
@@ -553,6 +559,7 @@ public class Chatroom extends JFrame{
                     currentUser.setIntro(introField.getText().trim());
 
                     // Call updateUserInfo() using the main class reference
+                    // Need to update the information also in database!
                     mainClassReference.updateUserInfo();
 
                     dispose();
@@ -568,6 +575,7 @@ public class Chatroom extends JFrame{
     private void updateUserInfo() {
         try {
             current_user.updateUser();
+            // call for object method
         } catch (SQLException | ClassNotFoundException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(mainFrame, "Error updating user information. Please try again later.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -575,6 +583,10 @@ public class Chatroom extends JFrame{
     }
 
     private void sendExitMessage() {
+        /*
+         * This method tells the server this user has exited
+         * so that the server can delete it from the online user list
+         * */
         if (socket != null && output != null) {
             try {
                 Message exitMessage = new Message();
@@ -589,6 +601,10 @@ public class Chatroom extends JFrame{
     }
 
     private void updateFriendsList(List<UserConnection> onlineFriends, String currentUser) {
+        /*
+         * Input the online friend list and current name
+         * This method add all users to the list except the user him/herself
+         */
         friendsListModel.clear();
         for (UserConnection userConnection : onlineFriends) {
             User friend = userConnection.getUser();

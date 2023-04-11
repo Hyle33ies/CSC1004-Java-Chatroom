@@ -230,8 +230,8 @@ public class RegisterWindow {
                     //dialog
                     JDialog d1 = new JDialog(Jframe, "username/password invalid!", false);
                     //content
-                    JButton b1 = new JButton("OK");
-                    b1.setBounds(0, 0, 250, 100);
+                    JButton b1 = new JButton("Fine");
+                    b1.setBounds(0, 0, 251, 100);
                     b1.addMouseListener(new MouseAdapter() {
                         @Override
                         public void mouseClicked(MouseEvent e) {
@@ -240,7 +240,7 @@ public class RegisterWindow {
                     });
                     d1.add(b1);
                     //action
-                    d1.setBounds(300, 350, 250, 100);
+                    d1.setBounds(300, 350, 251, 100);
                     d1.setVisible(true);
                     d1.addWindowListener(new WindowAdapter() {
                         @Override
@@ -253,7 +253,7 @@ public class RegisterWindow {
                     JDialog d1 = new JDialog(Jframe, "age invalid!", false);
                     //content
                     JButton b1 = new JButton("OK");
-                    b1.setBounds(0, 0, 250, 100);
+                    b1.setBounds(0, 0, 251, 100);
                     b1.addMouseListener(new MouseAdapter() {
                         @Override
                         public void mouseClicked(MouseEvent e) {
@@ -308,17 +308,23 @@ public class RegisterWindow {
                             //fail
                             Login.ErrorDialog ed = new Login.ErrorDialog(Jframe, "This username or email has been used!");
                         } else {
+                            // Valid!
                             sql = "insert into users (username, password, age, sex, email, country, city, introduction) " +
                                     "values(?,?,?,?,?,?,?,?)";
                             PreparedStatement statement1 = connection.prepareStatement(sql);
-                            statement1.setObject(1,s1);
-                            statement1.setObject(2,s2);
-                            statement1.setInt(3,age);
-                            statement1.setObject(4,sex);
-                            statement1.setObject(5,email);
-                            statement1.setObject(6,country);
-                            statement1.setObject(7,city);
-                            statement1.setObject(8,intro);
+                            try {
+                                statement1.setObject(1,s1);
+                                statement1.setObject(2,s2);
+                                statement1.setObject(3,age);
+                                statement1.setObject(4,sex);
+                                statement1.setObject(5,email);
+                                statement1.setObject(6,country);
+                                statement1.setObject(7,city);
+                                statement1.setObject(8,intro);
+                            } catch (SQLException ee){
+                                ee.printStackTrace();
+                            }
+
                             int resultUpdate = statement1.executeUpdate();
                             System.out.println(resultUpdate);
                             //dialog

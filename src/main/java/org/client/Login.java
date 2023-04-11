@@ -167,12 +167,13 @@ public class Login {
             Register.start();
         });
         MenuItem menuForgetPassword = new MenuItem("I forget my password!");
+        //TODO Find back your account (not required)
         menu2.add(menuRegister);
         menu2.add(menuForgetPassword);
         bar.add(menu1);
         bar.add(menu2);
         frame.setMenuBar(bar);
-        //PopMenu
+        //PopMenu, but not very useful after implementing
         PopupMenu popMenu = new PopupMenu();
         MenuItem menuExitPop = new MenuItem("Exit");
         menuExitPop.addActionListener(e -> dialog.setVisible(true));
@@ -203,7 +204,7 @@ public class Login {
             }
         });
 
-        //part2:login verification
+        //Part2: login verification
         label1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -229,9 +230,12 @@ public class Login {
                         frame.setVisible(false);
                         try {
                             if (checkbox.getState()) {
+                                // If client ticks the checkbox, delete the former stored information,
                                 deleteRememberedUser();
+                                // Save the new one
                                 saveRememberedUser(s1, s2);
                             } else {
+                                // If no, delete the information formerly stored if exists
                                 deleteRememberedUser();
                             }
                         } catch (SQLException ex) {
@@ -247,7 +251,7 @@ public class Login {
         });
     }
     static class ErrorDialog extends JDialog {
-
+        // Just a simple Dialog
         public ErrorDialog(Frame parent, String message) {
             super(parent, "Error", true);
             JPanel panel = new JPanel();
@@ -266,7 +270,6 @@ public class Login {
         }
     }
 
-    // Add these methods to the Login class
     private void saveRememberedUser(String username, String password) throws SQLException {
         String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?)";
         PreparedStatement statement = connection.prepareStatement(sql);
@@ -276,8 +279,9 @@ public class Login {
         System.out.println("Saved user");
     }
 
+    @SuppressWarnings("All")
     private void deleteRememberedUser() throws SQLException {
-        String sql = "DELETE FROM user_remember";
+        String sql = "DELETE FROM user_remember"; // Exactly delete everything
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.executeUpdate();
         System.out.println("Deleted user");
