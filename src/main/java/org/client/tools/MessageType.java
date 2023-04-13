@@ -14,4 +14,5 @@ public interface MessageType {
     String MESSAGE_CLIENT_EXIT = "6";
     String MESSAGE_LOGIN_ATTEMPT = "0";
     String MESSAGE_UPDATE_PORT = "7";
+    String MESSAGE_UPDATE_OUTPUT_STREAM = "8";
 }

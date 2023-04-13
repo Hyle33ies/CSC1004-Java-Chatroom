@@ -63,6 +63,10 @@ public class Chatroom extends JFrame {
             System.out.println("Local port: " + socket.getLocalPort());
             output = new ObjectOutputStream(socket.getOutputStream());
             input = new ObjectInputStream(socket.getInputStream());
+            Message updateOutputStreamMessage = new Message();
+            updateOutputStreamMessage.setSender(current_user.getUsername());
+            updateOutputStreamMessage.setMesType(MessageType.MESSAGE_UPDATE_OUTPUT_STREAM);
+            output.writeObject(updateOutputStreamMessage);
             sendUpdatedPort();
             listenToIncomingMessages();
         } catch (IOException e) {

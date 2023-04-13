@@ -123,6 +123,9 @@ public class Server {
                                 int updatedPort = Integer.parseInt(message.getContent());
                                 updatePort(username, updatedPort);
                             }
+                            case MessageType.MESSAGE_UPDATE_OUTPUT_STREAM -> {
+                                updateOutputStream(message.getSender(), outputStream);
+                            }
                         }
                         message = (Message) inputStream.readObject();
                     }
@@ -192,6 +195,14 @@ public class Server {
         for (UserConnection userConnection : connectedUsers) {
             if (userConnection.getUser().getUsername().equals(username)) {
                 userConnection.setPort(updatedPort);
+                break;
+            }
+        }
+    }
+    private void updateOutputStream(String username, ObjectOutputStream updatedOutputStream) {
+        for (UserConnection userConnection : connectedUsers) {
+            if (userConnection.getUser().getUsername().equals(username)) {
+                userConnection.setOutputStream(updatedOutputStream);
                 break;
             }
         }
