@@ -651,7 +651,7 @@ public class Chatroom extends JFrame {
                             System.out.println("Received Messages from:" + sender);
                             // Update the chat pane for the sender
                             SwingUtilities.invokeLater(() -> {
-                                JTextPane chatPane = userChatPanes.get(sender);
+                                JTextPane chatPane = getChatPaneForUser(sender);
                                 String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + sendTime + "]:</b></font> " + messageContent.replace("\n", "<br>") + "<br>";
                                 chatPane.setContentType("text/html");
                                 String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
@@ -681,6 +681,15 @@ public class Chatroom extends JFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    private JTextPane getChatPaneForUser(String username) {
+        JTextPane chatPane = userChatPanes.get(username);
+        if (chatPane == null) {
+            chatPane = new JTextPane();
+            chatPane.setEditable(false);
+            userChatPanes.put(username, chatPane);
+        }
+        return chatPane;
     }
 
 }
