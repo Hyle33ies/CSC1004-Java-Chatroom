@@ -5,18 +5,18 @@ import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.server.UserConnection;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -356,7 +356,7 @@ public class Chatroom extends JFrame {
             int returnValue = fileChooser.showOpenDialog(mainFrame);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                // TODO Perform file handling operations
+                sendFile(selectedFile);
             }
         });
 
@@ -659,6 +659,46 @@ public class Chatroom extends JFrame {
                             });
                             break;
                         }
+                        case MessageType.MESSAGE_FILE_TRANSFER: {
+                            System.out.println("Receive a File from " + incomingMessage.getSender());
+                            String sender = incomingMessage.getSender();
+                            String fileName = incomingMessage.getFileName();
+                            System.out.println("Filename: " + fileName);
+                            byte[] decodedBytes = Base64.getDecoder().decode(incomingMessage.getContent());
+
+                            if (incomingMessage.isImage) {
+                                System.out.println("Receive an Image!");
+                                SwingUtilities.invokeLater(() -> {
+                                    ImageIcon imageIcon = new ImageIcon(decodedBytes);
+                                    JTextPane chatPane = getChatPaneForUser(sender);
+                                    appendImageToChatPane(sender, chatPane, imageIcon,true);
+//                                    chatPane = getChatPaneForUser(current_user.getUsername());
+//                                    appendImageToChatPane(sender, chatPane, imageIcon,true);
+                                });
+                            }
+
+                            int result = JOptionPane.showConfirmDialog(mainFrame, sender + " wants to send you a file: " + fileName + ". Do you want to accept?", "File Transfer", JOptionPane.YES_NO_OPTION);
+                            if (result == JOptionPane.YES_OPTION) {
+                                JFileChooser fileChooser = new JFileChooser();
+                                fileChooser.setSelectedFile(new File(fileName));
+                                fileChooser.setDialogTitle("Save File");
+                                int userSelection = fileChooser.showSaveDialog(mainFrame);
+                                if (userSelection == JFileChooser.APPROVE_OPTION) {
+                                    File fileToSave = fileChooser.getSelectedFile();
+                                    try {
+                                        Files.write(fileToSave.toPath(), decodedBytes);
+                                        JOptionPane.showMessageDialog(mainFrame, "File saved successfully.", "File Transfer", JOptionPane.INFORMATION_MESSAGE);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        JOptionPane.showMessageDialog(mainFrame, "Failed to save the file. Please try again.", "File Transfer", JOptionPane.ERROR_MESSAGE);
+                                    }
+                                }
+                            }
+                            break;
+                        }
+
+
+
                     }
                 }
             } catch (EOFException | SocketException e) {
@@ -682,6 +722,7 @@ public class Chatroom extends JFrame {
             e.printStackTrace();
         }
     }
+
     private JTextPane getChatPaneForUser(String username) {
         JTextPane chatPane = userChatPanes.get(username);
         if (chatPane == null) {
@@ -692,4 +733,84 @@ public class Chatroom extends JFrame {
         return chatPane;
     }
 
+    private void sendFile(File file) {
+        User selectedUser = friendsList.getSelectedValue();
+        String selectedUsername = selectedUser != null ? selectedUser.getUsername() : null;
+        if (selectedUsername == null) {
+            showWarningMessage("Please select a friend before sending a file.");
+            return;
+        }
+
+        String fileName = file.getName();
+        String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
+
+        if (fileExtension.equalsIgnoreCase("png") || fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("jpeg")) {
+            // Handle image files
+            try {
+                BufferedImage image = ImageIO.read(file);
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                ImageIO.write(image, fileExtension, outputStream);
+                outputStream.flush();
+                String base64Image = Base64.getEncoder().encodeToString(outputStream.toByteArray());
+                outputStream.close();
+
+                Message message = new Message();
+                message.setSender(current_user.getUsername());
+                message.setGetter(selectedUsername);
+                message.setContent(base64Image);
+                message.setFileExtension(fileExtension);
+                message.setMesType(MessageType.MESSAGE_FILE_TRANSFER);
+                message.setFileName(fileName);
+                message.isImage = true;
+                output.writeObject(message);
+                output.flush();
+
+                SwingUtilities.invokeLater(() -> {
+                    ImageIcon imageIcon = new ImageIcon(outputStream.toByteArray());
+                    JTextPane chatPane = getChatPaneForUser(selectedUsername);
+                    appendImageToChatPane(current_user.getUsername(), chatPane, imageIcon,false);
+                });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                showWarningMessage("Failed to send the image. Please try again.");
+            }
+        } else {
+            // Handle non-image files
+            try {
+                byte[] fileContent = Files.readAllBytes(file.toPath());
+                String encodedContent = Base64.getEncoder().encodeToString(fileContent);
+                Message message = new Message();
+                message.setSender(current_user.getUsername());
+                message.setGetter(selectedUsername);
+                message.setContent(encodedContent);
+                message.setMesType(MessageType.MESSAGE_FILE_TRANSFER);
+                message.setFileName(fileName);
+                output.writeObject(message);
+                output.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+                showWarningMessage("Failed to send the file. Please try again.");
+            }
+        }
+    }
+
+    private void appendImageToChatPane(String sender, JTextPane chatPane, ImageIcon imageIcon, boolean flag) {
+        StyledDocument doc = chatPane.getStyledDocument();
+        Style defaultStyle = doc.getStyle(StyleContext.DEFAULT_STYLE);
+        Style senderStyle = doc.addStyle("SenderStyle", defaultStyle);
+        StyleConstants.setForeground(senderStyle, Color.BLUE);
+        if(flag)StyleConstants.setForeground(senderStyle, Color.RED);
+        StyleConstants.setBold(senderStyle, true);
+
+        try {
+            doc.insertString(doc.getLength(), sender + ": ", senderStyle);
+            Style imageStyle = doc.addStyle("ImageStyle", null);
+            StyleConstants.setIcon(imageStyle, imageIcon);
+            doc.insertString(doc.getLength(), " ", imageStyle);
+            doc.insertString(doc.getLength(), "\n", null);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
 }

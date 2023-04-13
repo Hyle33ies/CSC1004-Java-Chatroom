@@ -19,6 +19,25 @@ public class Message implements Serializable {
     private User user;
     private ArrayList<UserConnection> userList;
     private String sendTime;
+    private String fileName;
+    private String fileExtension;
+    public boolean isImage = false;
+
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
+    public void setFileExtension(String fileExtension) {
+        this.fileExtension = fileExtension;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
     public String getSendTime() {
         return sendTime;
@@ -75,4 +94,5 @@ public class Message implements Serializable {
     public void setUserList(ArrayList<UserConnection> userList) {
         this.userList = userList;
     }
+
 }

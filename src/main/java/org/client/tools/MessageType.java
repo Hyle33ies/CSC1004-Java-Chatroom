@@ -15,4 +15,6 @@ public interface MessageType {
     String MESSAGE_LOGIN_ATTEMPT = "0";
     String MESSAGE_UPDATE_PORT = "7";
     String MESSAGE_UPDATE_OUTPUT_STREAM = "8";
+    String MESSAGE_FILE_TRANSFER = "9";
+
 }

@@ -126,6 +126,29 @@ public class Server {
                             case MessageType.MESSAGE_UPDATE_OUTPUT_STREAM -> {
                                 updateOutputStream(message.getSender(), outputStream);
                             }
+                            case MessageType.MESSAGE_FILE_TRANSFER -> {
+                                System.out.println("This file is for: " + message.getGetter());
+                                UserConnection targetUserConnection = null;
+                                for (UserConnection userConnection : connectedUsers) {
+                                    if (userConnection.getUser().getUsername().equals(message.getGetter())) {
+                                        targetUserConnection = userConnection;
+                                        break;
+                                    }
+                                }
+                                System.out.println(targetUserConnection.toString());
+                                if (targetUserConnection != null) {
+                                    try {
+                                        ObjectOutputStream targetOutputStream = targetUserConnection.getOutputStream();
+                                        targetOutputStream.writeObject(message);
+                                        System.out.println("File sent successfully");
+                                        targetOutputStream.flush();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    System.out.println("Target user not found or not online.");
+                                }
+                            }
                         }
                         message = (Message) inputStream.readObject();
                     }
