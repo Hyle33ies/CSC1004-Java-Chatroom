@@ -95,6 +95,35 @@ public class Server {
                                 connectedUsers.removeIf(userConnection -> userConnection.getUser().getUsername().equals(finalMessage.getSender()));
                                 System.out.println(connectedUsers);
                             }
+                            case MessageType.MESSAGE_COMM_MES -> {
+                                UserConnection targetUserConnection = null;
+                                for (UserConnection userConnection : connectedUsers) {
+                                    if (userConnection.getUser().getUsername().equals(message.getGetter())) {
+                                        targetUserConnection = userConnection;
+                                        break;
+                                    }
+                                }
+
+                                if (targetUserConnection != null) {
+                                    try {
+                                        // Update the port number if necessary
+                                        if (targetUserConnection.getPort() != socket.getPort()) {
+                                            targetUserConnection.setPort(socket.getPort());
+                                        }
+
+                                        Socket targetSocket = new Socket(targetUserConnection.getIpAddress(), targetUserConnection.getPort());
+                                        ObjectOutputStream targetOutputStream = new ObjectOutputStream(targetSocket.getOutputStream());
+                                        targetOutputStream.writeObject(message);
+                                        targetOutputStream.flush();
+                                        targetOutputStream.close();
+                                        targetSocket.close();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    System.out.println("Target user not found or not online.");
+                                }
+                            }
                         }
                         message = (Message) inputStream.readObject();
                     }

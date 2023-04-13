@@ -12,11 +12,9 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -63,6 +61,7 @@ public class Chatroom extends JFrame {
             socket = new Socket(serverAddress, serverPort);
             output = new ObjectOutputStream(socket.getOutputStream());
             input = new ObjectInputStream(socket.getInputStream());
+            listenToIncomingMessages();
         } catch (IOException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(mainFrame, "Error connecting to the server. Please try again later.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -195,13 +194,13 @@ public class Chatroom extends JFrame {
                 getOnlineFriendsMessage.setSender(current_user.getUsername());
                 output.writeObject(getOnlineFriendsMessage);
                 // Get
-                Message responseMessage = (Message) input.readObject();
-                if (responseMessage.getMesType().equals(MessageType.MESSAGE_RET_ONLINE_FRIEND)) {
-                    ArrayList<UserConnection> onlineFriends = responseMessage.getUserList();
-                    friendsListConnection = onlineFriends;//update the connection list
-                    updateFriendsList(onlineFriends, current_user.getUsername());
-                }
-            } catch (IOException | ClassNotFoundException ex) {
+//                Message responseMessage = (Message) input.readObject();
+//                if (responseMessage.getMesType().equals(MessageType.MESSAGE_RET_ONLINE_FRIEND)) {
+//                    ArrayList<UserConnection> onlineFriends = responseMessage.getUserList();
+//                    friendsListConnection = onlineFriends;//update the connection list
+//                    updateFriendsList(onlineFriends, current_user.getUsername());
+//                }
+            } catch (IOException ex) {
                 ex.printStackTrace();
             }
         });
@@ -388,6 +387,7 @@ public class Chatroom extends JFrame {
 
         // Initialize userChatPanes
         userChatPanes = new HashMap<>();
+
         mainFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -624,4 +624,42 @@ public class Chatroom extends JFrame {
             e.printStackTrace();
         }
     }
+
+    private void listenToIncomingMessages() {
+        new Thread(() -> {
+            try {
+                while (true) {
+                    Message incomingMessage = (Message) input.readObject();
+                    switch (incomingMessage.getMesType()) {
+                        case MessageType.MESSAGE_RET_ONLINE_FRIEND: {
+                            ArrayList<UserConnection> onlineFriends = incomingMessage.getUserList();
+                            friendsListConnection = onlineFriends; // Update the connection list
+                            updateFriendsList(onlineFriends, current_user.getUsername());
+                            break;
+                        }
+                        case MessageType.MESSAGE_COMM_MES: {
+                            String sender = incomingMessage.getSender();
+                            String messageContent = incomingMessage.getContent();
+                            String sendTime = incomingMessage.getSendTime();
+
+                            // Update the chat pane for the sender
+                            SwingUtilities.invokeLater(() -> {
+                                JTextPane chatPane = userChatPanes.get(sender);
+                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + sendTime + "]:</b></font> " + messageContent.replace("\n", "<br>") + "<br>";
+                                chatPane.setContentType("text/html");
+                                String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
+                                chatPane.setText(currentText + formattedMessage + "</body></html>");
+                            });
+                            break;
+                        }
+                    }
+                }
+            } catch (EOFException | SocketException e) {
+                System.out.println("Connection closed or reset.");
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
 }
