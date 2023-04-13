@@ -2,6 +2,7 @@ package org.server;
 
 import org.client.tools.User;
 
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
@@ -16,6 +17,7 @@ public class UserConnection implements Serializable {
     private User user;
     private String ipAddress;
     private int port;
+    private transient ObjectOutputStream outputStream;
 
     @Override
     public String toString() {
@@ -30,6 +32,13 @@ public class UserConnection implements Serializable {
         this.user = user;
         this.ipAddress = ipAddress;
         this.port = port;
+    }
+
+    public UserConnection(User user, String ipAddress, int port, ObjectOutputStream outputStream) {
+        this.user = user;
+        this.ipAddress = ipAddress;
+        this.port = port;
+        this.outputStream = outputStream;
     }
 
     public User getUser() {
@@ -54,6 +63,14 @@ public class UserConnection implements Serializable {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public ObjectOutputStream getOutputStream() {
+        return outputStream;
+    }
+
+    public void setOutputStream(ObjectOutputStream outputStream) {
+        this.outputStream = outputStream;
     }
 }
 

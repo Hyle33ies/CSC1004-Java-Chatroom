@@ -59,8 +59,11 @@ public class Chatroom extends JFrame {
     private void connectToServer(String serverAddress, int serverPort) {
         try {
             socket = new Socket(serverAddress, serverPort);
+            System.out.println("Connected to server: " + socket.getInetAddress().getHostAddress() + " on port: " + socket.getPort());
+            System.out.println("Local port: " + socket.getLocalPort());
             output = new ObjectOutputStream(socket.getOutputStream());
             input = new ObjectInputStream(socket.getInputStream());
+            sendUpdatedPort();
             listenToIncomingMessages();
         } catch (IOException e) {
             e.printStackTrace();
@@ -641,7 +644,7 @@ public class Chatroom extends JFrame {
                             String sender = incomingMessage.getSender();
                             String messageContent = incomingMessage.getContent();
                             String sendTime = incomingMessage.getSendTime();
-
+                            System.out.println("Received Messages from:" + sender);
                             // Update the chat pane for the sender
                             SwingUtilities.invokeLater(() -> {
                                 JTextPane chatPane = userChatPanes.get(sender);
@@ -660,6 +663,20 @@ public class Chatroom extends JFrame {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void sendUpdatedPort() {
+        Message updatePortMessage = new Message();
+        updatePortMessage.setMesType(MessageType.MESSAGE_UPDATE_PORT);
+        updatePortMessage.setSender(current_user.getUsername());
+        updatePortMessage.setContent(String.valueOf(socket.getLocalPort()));
+
+        try {
+            output.writeObject(updatePortMessage);
+            output.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

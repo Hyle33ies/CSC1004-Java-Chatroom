@@ -276,7 +276,6 @@ public class Login {
         statement.setString(1, username);
         statement.setString(2, password);
         statement.executeUpdate();
-        System.out.println("Saved user");
     }
 
     @SuppressWarnings("All")
@@ -284,7 +283,6 @@ public class Login {
         String sql = "DELETE FROM user_remember"; // Exactly delete everything
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.executeUpdate();
-        System.out.println("Deleted user");
     }
 
     private boolean loadRememberedUser(TextField field1,TextField field2) throws SQLException {

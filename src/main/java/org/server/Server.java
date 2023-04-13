@@ -80,7 +80,7 @@ public class Server {
                                 if ((user = checkUser(username, password)) != null) {
                                     responseMessage.setMesType(MessageType.MESSAGE_LOGIN_SUCCESSFUL);
                                     responseMessage.setUser(user);
-                                    connectedUsers.add(new UserConnection(user, socket.getInetAddress().getHostAddress(), socket.getPort()));
+                                    connectedUsers.add(new UserConnection(user, socket.getInetAddress().getHostAddress(), socket.getPort(), outputStream));
                                     System.out.println(connectedUsers);
                                 } else {
                                     responseMessage.setMesType(MessageType.MESSAGE_LOGIN_FAILURE);
@@ -96,6 +96,7 @@ public class Server {
                                 System.out.println(connectedUsers);
                             }
                             case MessageType.MESSAGE_COMM_MES -> {
+                                System.out.println("This Message is for: " + message.getGetter());
                                 UserConnection targetUserConnection = null;
                                 for (UserConnection userConnection : connectedUsers) {
                                     if (userConnection.getUser().getUsername().equals(message.getGetter())) {
@@ -103,26 +104,24 @@ public class Server {
                                         break;
                                     }
                                 }
-
+                                System.out.println(targetUserConnection.toString());
                                 if (targetUserConnection != null) {
                                     try {
-                                        // Update the port number if necessary
-                                        if (targetUserConnection.getPort() != socket.getPort()) {
-                                            targetUserConnection.setPort(socket.getPort());
-                                        }
-
-                                        Socket targetSocket = new Socket(targetUserConnection.getIpAddress(), targetUserConnection.getPort());
-                                        ObjectOutputStream targetOutputStream = new ObjectOutputStream(targetSocket.getOutputStream());
+                                        ObjectOutputStream targetOutputStream = targetUserConnection.getOutputStream();
                                         targetOutputStream.writeObject(message);
+                                        System.out.println("Send Successfully");
                                         targetOutputStream.flush();
-                                        targetOutputStream.close();
-                                        targetSocket.close();
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
                                 } else {
                                     System.out.println("Target user not found or not online.");
                                 }
+                            }
+                            case MessageType.MESSAGE_UPDATE_PORT -> {
+                                String username = message.getSender();
+                                int updatedPort = Integer.parseInt(message.getContent());
+                                updatePort(username, updatedPort);
                             }
                         }
                         message = (Message) inputStream.readObject();
@@ -138,16 +137,16 @@ public class Server {
             } catch (IOException | ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
             } finally {
-                try {
-                    if (outputStream != null) outputStream.close();
-                    if (inputStream != null) if (outputStream != null) {
-                        outputStream.close();
-                    }
-                    if (inputStream != null) inputStream.close();
-                    if (socket != null) socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    if (outputStream != null) outputStream.close();
+//                    if (inputStream != null) if (outputStream != null) {
+//                        outputStream.close();
+//                    }
+//                    if (inputStream != null) inputStream.close();
+//                    if (socket != null) socket.close();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
     }
@@ -189,4 +188,13 @@ public class Server {
         }
         return null;
     }
+    private void updatePort(String username, int updatedPort) {
+        for (UserConnection userConnection : connectedUsers) {
+            if (userConnection.getUser().getUsername().equals(username)) {
+                userConnection.setPort(updatedPort);
+                break;
+            }
+        }
+    }
+
 }
