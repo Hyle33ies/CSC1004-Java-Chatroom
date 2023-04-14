@@ -475,7 +475,7 @@ public class Login {
             }
 
             public void paint(Graphics g) {
-                g.setColor(Color.BLACK);
+                g.setColor(new Color(0,255,255,90));
                 g.fillOval(x, y, size, size);
             }
         }
