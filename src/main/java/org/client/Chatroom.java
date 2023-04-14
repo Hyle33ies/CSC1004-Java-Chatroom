@@ -18,6 +18,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,9 +43,12 @@ public class Chatroom extends JFrame {
     private Socket socket;
     private ObjectInputStream input;
     private ObjectOutputStream output;
+    private final java.sql.Connection connection;
 
 
-    public Chatroom(User current_user) {
+    public Chatroom(User current_user) throws ClassNotFoundException, SQLException {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
         this.current_user = current_user;
         System.out.println("Current user: " + current_user.getUsername());
     }
@@ -348,7 +354,6 @@ public class Chatroom extends JFrame {
         //Add a keyboard shortcut "ctrl + Enter" for submitButton
         submitButton.registerKeyboardAction(e -> submitMessage(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        //TODO Send Files
         JButton sendFilesButton = new JButton("Files");
         sendFilesButton.setPreferredSize(new Dimension(80, 20));
         sendFilesButton.addActionListener(e -> {
@@ -367,12 +372,54 @@ public class Chatroom extends JFrame {
 
         //TODO Message History
         JButton historyButton = new JButton("History");
-        historyButton.setPreferredSize(new Dimension(80, 20));
         historyButton.addActionListener(e -> {
             JFrame historyFrame = new JFrame("History");
             historyFrame.setAlwaysOnTop(true);
             historyFrame.setSize(300, 600);
             historyFrame.setLocationRelativeTo(mainFrame);
+
+            // Create a JTextPane to display the message history
+            JTextPane historyPane = new JTextPane();
+            historyPane.setContentType("text/html");
+            historyPane.setEditable(false);
+            JScrollPane historyScrollPane = new JScrollPane(historyPane);
+            historyFrame.add(historyScrollPane);
+
+            // Fetch the message history for the current users
+            User selectedUser = friendsList.getSelectedValue();
+            if (selectedUser != null) {
+                try{
+                    PreparedStatement statement = connection.prepareStatement("SELECT sender, getter, content, send_time FROM message_history WHERE (sender = ? AND getter = ?) OR (sender = ? AND getter = ?) ORDER BY send_time ASC");
+                    statement.setString(1, current_user.getUsername());
+                    statement.setString(2, selectedUser.getUsername());
+                    statement.setString(3, selectedUser.getUsername());
+                    statement.setString(4, current_user.getUsername());
+
+                    ResultSet resultSet = statement.executeQuery();
+                    StringBuilder historyText = new StringBuilder("<html><body>");
+
+                    // Add messages to the historyPane
+                    while (resultSet.next()) {
+                        String sender = resultSet.getString("sender");
+                        String getter = resultSet.getString("getter");
+                        String content = resultSet.getString("content");
+                        String sendTime = resultSet.getString("send_time");
+
+                        String color = sender.equals(current_user.getUsername()) ? "blue" : "green";
+                        String formattedMessage = "<font color=\"" + color + "\"><b>" + sender + " [" + sendTime + "]:</b></font> " + content.replace("\n", "<br>") + "<br>";
+                        historyText.append(formattedMessage);
+                    }
+
+
+                    historyText.append("</body></html>");
+                    historyPane.setText(historyText.toString());
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    showWarningMessage("Failed to fetch message history. Please try again.");
+                    return;
+                }
+            }
+
             historyFrame.setVisible(true);
         });
 
@@ -454,6 +501,19 @@ public class Chatroom extends JFrame {
         msg.setSendTime(sendTime);
         msg.setMesType(MessageType.MESSAGE_COMM_MES);
 
+        try {
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO message_history(sender, getter, content, send_time) VALUES (?, ?, ?, ?)");
+            statement.setString(1, msg.getSender());
+            statement.setString(2, msg.getGetter());
+            statement.setString(3, msg.getContent());
+            statement.setString(4, msg.getSendTime());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showWarningMessage("Failed to save the message. Please try again.");
+            return;
+        }
+
         // Send the message to the server
         try {
             output.writeObject(msg);
@@ -509,10 +569,6 @@ public class Chatroom extends JFrame {
 
             pack();
             setLocationRelativeTo(owner);
-        }
-
-        public String getNewUserName() {
-            return newUserName;
         }
     }
 
@@ -638,13 +694,12 @@ public class Chatroom extends JFrame {
                 while (true) {
                     Message incomingMessage = (Message) input.readObject();
                     switch (incomingMessage.getMesType()) {
-                        case MessageType.MESSAGE_RET_ONLINE_FRIEND: {
+                        case MessageType.MESSAGE_RET_ONLINE_FRIEND -> {
                             ArrayList<UserConnection> onlineFriends = incomingMessage.getUserList();
                             friendsListConnection = onlineFriends; // Update the connection list
                             updateFriendsList(onlineFriends, current_user.getUsername());
-                            break;
                         }
-                        case MessageType.MESSAGE_COMM_MES: {
+                        case MessageType.MESSAGE_COMM_MES -> {
                             String sender = incomingMessage.getSender();
                             String messageContent = incomingMessage.getContent();
                             String sendTime = incomingMessage.getSendTime();
@@ -657,9 +712,8 @@ public class Chatroom extends JFrame {
                                 String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
                                 chatPane.setText(currentText + formattedMessage + "</body></html>");
                             });
-                            break;
                         }
-                        case MessageType.MESSAGE_FILE_TRANSFER: {
+                        case MessageType.MESSAGE_FILE_TRANSFER -> {
                             System.out.println("Receive a File from " + incomingMessage.getSender());
                             String sender = incomingMessage.getSender();
                             String fileName = incomingMessage.getFileName();
@@ -671,7 +725,7 @@ public class Chatroom extends JFrame {
                                 SwingUtilities.invokeLater(() -> {
                                     ImageIcon imageIcon = new ImageIcon(decodedBytes);
                                     JTextPane chatPane = getChatPaneForUser(sender);
-                                    appendImageToChatPane(sender, chatPane, imageIcon,true);
+                                    appendImageToChatPane(sender, chatPane, imageIcon, true);
 //                                    chatPane = getChatPaneForUser(current_user.getUsername());
 //                                    appendImageToChatPane(sender, chatPane, imageIcon,true);
                                 });
@@ -694,11 +748,7 @@ public class Chatroom extends JFrame {
                                     }
                                 }
                             }
-                            break;
                         }
-
-
-
                     }
                 }
             } catch (EOFException | SocketException e) {
@@ -768,7 +818,7 @@ public class Chatroom extends JFrame {
                 SwingUtilities.invokeLater(() -> {
                     ImageIcon imageIcon = new ImageIcon(outputStream.toByteArray());
                     JTextPane chatPane = getChatPaneForUser(selectedUsername);
-                    appendImageToChatPane(current_user.getUsername(), chatPane, imageIcon,false);
+                    appendImageToChatPane(current_user.getUsername(), chatPane, imageIcon, false);
                 });
 
             } catch (IOException e) {
@@ -800,7 +850,7 @@ public class Chatroom extends JFrame {
         Style defaultStyle = doc.getStyle(StyleContext.DEFAULT_STYLE);
         Style senderStyle = doc.addStyle("SenderStyle", defaultStyle);
         StyleConstants.setForeground(senderStyle, Color.BLUE);
-        if(flag)StyleConstants.setForeground(senderStyle, Color.RED);
+        if (flag) StyleConstants.setForeground(senderStyle, Color.RED);
         StyleConstants.setBold(senderStyle, true);
 
         try {

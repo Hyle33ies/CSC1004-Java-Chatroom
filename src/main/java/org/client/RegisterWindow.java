@@ -436,8 +436,8 @@ public class RegisterWindow {
     }
 
     static class AnimatedBackgroundPanel2 extends JPanel {
-        private static final int BALL_COUNT = 30;
-        private static final int MAX_SPEED = 3;
+        private static final int BALL_COUNT = 40;
+        private static final int MAX_SPEED = 4;
 
         private java.util.List<Ball> balls = new ArrayList<>();
 

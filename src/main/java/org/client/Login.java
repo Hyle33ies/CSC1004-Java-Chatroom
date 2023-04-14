@@ -256,7 +256,7 @@ public class Login {
             } else {
                 showErrorDialog("Wrong username or password!");
             }
-        } catch (IOException | ClassNotFoundException ex) {
+        } catch (IOException | ClassNotFoundException | SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
