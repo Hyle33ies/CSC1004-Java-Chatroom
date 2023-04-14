@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 import org.client.tools.User;
 
@@ -67,8 +68,13 @@ public class RegisterWindow {
         notice.add(rule5);
         rule5.setPreferredSize(new Dimension(500, 17));
 
-        Jframe.add(notice);
+        backgroundPanel.add(notice);
         */
+
+        // Add the animated background
+        AnimatedBackgroundPanel2 backgroundPanel = new AnimatedBackgroundPanel2();
+        backgroundPanel.setLayout(null);
+        Jframe.setContentPane(backgroundPanel);
 
         // Notice
         JTextArea notice = new JTextArea();
@@ -87,11 +93,11 @@ public class RegisterWindow {
         Font font = new Font("Times New Roman", Font.PLAIN, 13);
         notice.setFont(font);
 
-        Jframe.add(notice);
+        backgroundPanel.add(notice);
 
         //information fill-up
         Container container = new Container();
-        container.setBounds(0, 130, 460, 540);
+        container.setBounds(20, 130, 460, 540);
         container.setVisible(true);//container center for information forms
         //username
         JLabel userName = new JLabel("username", JLabel.CENTER);
@@ -213,6 +219,7 @@ public class RegisterWindow {
 
         JTextArea introFill = new JTextArea();
         introFill.setBounds(100, 360, 300, 130);
+        introFill.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         container.add(introFill);
 
         //Button
@@ -251,7 +258,14 @@ public class RegisterWindow {
                 //check if the information is right
                 String s1 = userNameFill.getText();
                 String s2 = passwordFill.getText();
-                int age = Integer.parseInt(ageFill.getText());
+                String ageString = ageFill.getText();
+                if(ageString.equals("")){
+                    System.out.println("Please enter your age!");
+                    ErrorDialog ed = new ErrorDialog(Jframe, "Please enter your age!");
+                    ed.setVisible(true);
+                    return;
+                }
+                int age = Integer.parseInt(ageString);
                 Checkbox sexCheckbox = sexGroup.getSelectedCheckbox();
                 String sex = sexCheckbox.getLabel();
                 String email = mailFill.getText();
@@ -339,6 +353,7 @@ public class RegisterWindow {
                         if (result.next()) {
                             //fail
                             ErrorDialog ed = new ErrorDialog(Jframe, "This username or email has been used!");
+                            ed.setVisible(true);
                         } else {
                             // Valid!
                             sql = "insert into users (username, password, age, sex, email, country, city, introduction) " +
@@ -389,10 +404,23 @@ public class RegisterWindow {
 
             }
         });
-        Jframe.add(container);
+        notice.setOpaque(false);
+        userNameFill.setOpaque(false);
+        passwordFill.setOpaque(false);
+        confirmPasswordFill.setOpaque(false);
+        ageFill.setOpaque(false);
+        mailFill.setOpaque(false);
+        question1Fill.setOpaque(false);
+        question2Fill.setOpaque(false);
+        answer1Fill.setOpaque(false);
+        answer2Fill.setOpaque(false);
+        countryFill.setOpaque(false);
+        cityFill.setOpaque(false);
+        introFill.setOpaque(false);
+        backgroundPanel.add(container);
     }
 
-    public class ErrorDialog extends JDialog {
+    public static class ErrorDialog extends JDialog {
         public ErrorDialog(JFrame parent, String message) {
             super(parent, "Error", true);
             setBounds(parent.getX() + 200, parent.getY() + 200, 300, 150);
@@ -407,4 +435,78 @@ public class RegisterWindow {
         }
     }
 
+    static class AnimatedBackgroundPanel2 extends JPanel {
+        private static final int BALL_COUNT = 30;
+        private static final int MAX_SPEED = 3;
+
+        private java.util.List<Ball> balls = new ArrayList<>();
+
+        public AnimatedBackgroundPanel2() {
+            for (int i = 0; i < BALL_COUNT; i++) {
+                balls.add(new Ball(getRandomNumber(0, getWidth()), getRandomNumber(0, getHeight())));
+            }
+
+            Timer timer = new Timer(20, e -> moveBallsAndUpdateUI());
+            timer.start();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            for (Ball ball : balls) {
+                ball.paint(g);
+            }
+        }
+
+        private void moveBallsAndUpdateUI() {
+            for (Ball ball : balls) {
+                ball.move();
+                ball.checkBounds(getWidth(), getHeight());
+            }
+            repaint();
+        }
+
+        private int getRandomNumber(int min, int max) {
+            return (int) (Math.random() * (max - min + 1) + min);
+        }
+
+        class Ball {
+            int x;
+            int y;
+            int speedX;
+            int speedY;
+            int size;
+            Color ballColor;
+
+            public Ball(int x, int y) {
+                this.x = x;
+                this.y = y;
+                this.speedX = getRandomNumber(-MAX_SPEED, MAX_SPEED);
+                this.speedY = getRandomNumber(-MAX_SPEED, MAX_SPEED);
+                this.size = getRandomNumber(10, 20);
+                this.ballColor = new Color(getRandomNumber(0, 255), getRandomNumber(0, 255), getRandomNumber(0, 255), 128);
+            }
+
+            public void move() {
+                x += speedX;
+                y += speedY;
+            }
+
+            public void checkBounds(int width, int height) {
+                if (x < 0 || x + size > width) {
+                    speedX = -speedX;
+                }
+
+                if (y < 0 || y + size > height) {
+                    speedY = -speedY;
+                }
+            }
+
+            public void paint(Graphics g) {
+                g.setColor(ballColor);
+                g.fillOval(x, y, size, size);
+            }
+        }
+    }
 }
