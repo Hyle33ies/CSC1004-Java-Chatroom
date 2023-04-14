@@ -17,13 +17,13 @@ public class RegisterWindow {
     int x;
     int y;
 
-    public RegisterWindow() throws ClassNotFoundException {
+    public RegisterWindow() {
         Jframe = new JFrame();
         Jframe.setBackground(Color.lightGray);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         x = (int) ((screenSize.getWidth() - Jframe.getWidth()) / 2);
         y = (int) ((screenSize.getHeight() - Jframe.getHeight()) / 2);
-        Jframe.setBounds(x - 200, y - 350, 500, 700);
+        Jframe.setBounds(x - 200, y - 370, 500, 720);
         Jframe.setResizable(false);
 //        JFrame.setLayout(new BorderLayout());
         Jframe.setLayout(null);
@@ -40,6 +40,8 @@ public class RegisterWindow {
     }
 
     public void start() {
+        /*
+        An old version of notice, no longer used
         //notice
         Container notice = new Container();
         notice.setLayout(new FlowLayout());
@@ -66,9 +68,30 @@ public class RegisterWindow {
         rule5.setPreferredSize(new Dimension(500, 17));
 
         Jframe.add(notice);
+        */
+
+        // Notice
+        JTextArea notice = new JTextArea();
+        notice.setEditable(false);
+        notice.setBounds(10, 0, 480, 115);
+        notice.setLineWrap(true);
+        notice.setWrapStyleWord(true);
+        notice.setText("""
+                Notice:
+                1. The length of username/password should be at least 6 and at most 20.
+                2. Username/password should only contain numbers, letters and '@#$%^&_'.
+                3. The items with '*' are not required.
+                4. If you prefer not to say your age, fill out -1.
+                5. Question and answer are used to recover your password. But the function is not available now. Stay tuned.
+                """);
+        Font font = new Font("Times New Roman", Font.PLAIN, 13);
+        notice.setFont(font);
+
+        Jframe.add(notice);
+
         //information fill-up
         Container container = new Container();
-        container.setBounds(0, 130, 460, 520);
+        container.setBounds(0, 130, 460, 540);
         container.setVisible(true);//container center for information forms
         //username
         JLabel userName = new JLabel("username", JLabel.CENTER);
@@ -90,30 +113,39 @@ public class RegisterWindow {
         JTextField passwordFill = new JPasswordField();
         passwordFill.setBounds(100, 30, 300, 26);
         container.add(passwordFill);
+
+        // Confirm password
+        JLabel confirmPassword = new JLabel("confirm passwd", JLabel.CENTER);
+        confirmPassword.setBackground(Color.DARK_GRAY);
+        confirmPassword.setBounds(0, 60, 100, 26);
+        container.add(confirmPassword);
+
+        JTextField confirmPasswordFill = new JPasswordField();
+        confirmPasswordFill.setBounds(100, 60, 300, 26);
+        container.add(confirmPasswordFill);
+
         //age
         JLabel age = new JLabel("age(-1~120)", JLabel.CENTER);
-//        age.setBackground(Color.BLACK);
-        age.setBounds(0, 60, 100, 26);
+        age.setBounds(0, 90, 100, 26);
         container.add(age);
 
         JTextField ageFill = new JTextField();
-        ageFill.setBounds(100, 60, 300, 26);
+        ageFill.setBounds(100, 90, 300, 26);
         container.add(ageFill);
         //sex
         JLabel sex = new JLabel("Sex", JLabel.CENTER);
-//        sex.setBackground(Color.BLACK);
-        sex.setBounds(0, 90, 100, 26);
+        sex.setBounds(0, 120, 100, 26);
         container.add(sex);
 
         CheckboxGroup sexGroup = new CheckboxGroup();
         Checkbox sex1 = new Checkbox("Male", sexGroup, false);
-        sex1.setBounds(100, 90, 40, 26);
+        sex1.setBounds(100, 120, 40, 26);
         Checkbox sex2 = new Checkbox("Female", sexGroup, false);
-        sex2.setBounds(150, 90, 60, 26);
+        sex2.setBounds(150, 120, 60, 26);
         Checkbox sex3 = new Checkbox("Other", sexGroup, false);
-        sex3.setBounds(220, 90, 60, 26);
+        sex3.setBounds(220, 120, 60, 26);
         Checkbox sex4 = new Checkbox("Prefer not to say", sexGroup, true);
-        sex4.setBounds(280, 90, 140, 26);
+        sex4.setBounds(280, 120, 140, 26);
         container.add(sex1);
         container.add(sex2);
         container.add(sex3);
@@ -121,75 +153,75 @@ public class RegisterWindow {
         //e-mail
         JLabel mail = new JLabel("E-Mail", JLabel.CENTER);
         mail.setBackground(Color.BLACK);
-        mail.setBounds(0, 120, 100, 26);
+        mail.setBounds(0, 150, 100, 26);
         container.add(mail);
 
         JTextField mailFill = new JTextField();
-        mailFill.setBounds(100, 120, 300, 26);
+        mailFill.setBounds(100, 150, 300, 26);
         container.add(mailFill);
         //question
         JLabel question1 = new JLabel("Question1*", JLabel.CENTER);
-        question1.setBounds(0, 150, 100, 26);
+        question1.setBounds(0, 180, 100, 26);
         container.add(question1);
         JLabel answer1 = new JLabel("Answer1*", JLabel.CENTER);
-        answer1.setBounds(0, 180, 100, 26);
+        answer1.setBounds(0, 210, 100, 26);
         container.add(answer1);
         JLabel question2 = new JLabel("Question2*", JLabel.CENTER);
-        question2.setBounds(0, 210, 100, 26);
+        question2.setBounds(0, 240, 100, 26);
         container.add(question2);
         JLabel answer2 = new JLabel("Answer2*", JLabel.CENTER);
-        answer2.setBounds(0, 240, 100, 26);
+        answer2.setBounds(0, 270, 100, 26);
         container.add(answer2);
 
         JTextField question1Fill = new JTextField();
-        question1Fill.setBounds(100, 150, 300, 26);
+        question1Fill.setBounds(100, 180, 300, 26);
         container.add(question1Fill);
         JTextField question2Fill = new JTextField();
-        question2Fill.setBounds(100, 210, 300, 26);
+        question2Fill.setBounds(100, 240, 300, 26);
         container.add(question2Fill);
         JTextField answer1Fill = new JTextField();
-        answer1Fill.setBounds(100, 180, 300, 26);
+        answer1Fill.setBounds(100, 210, 300, 26);
         container.add(answer1Fill);
         JTextField answer2Fill = new JTextField();
-        answer2Fill.setBounds(100, 240, 300, 26);
+        answer2Fill.setBounds(100, 270, 300, 26);
         container.add(answer2Fill);
 
         //country
         JLabel country = new JLabel("Country*", JLabel.CENTER);
         country.setBackground(Color.BLACK);
-        country.setBounds(0, 270, 100, 26);
+        country.setBounds(0, 300, 100, 26);
         container.add(country);
 
         JTextField countryFill = new JTextField();
-        countryFill.setBounds(100, 270, 300, 26);
+        countryFill.setBounds(100, 300, 300, 26);
         container.add(countryFill);
 
         //city
         JLabel city = new JLabel("City*", JLabel.CENTER);
         city.setBackground(Color.BLACK);
-        city.setBounds(0, 300, 100, 26);
+        city.setBounds(0, 330, 100, 26);
         container.add(city);
 
         JTextField cityFill = new JTextField();
-        cityFill.setBounds(100, 300, 300, 26);
+        cityFill.setBounds(100, 330, 300, 26);
         container.add(cityFill);
 
         //introduction
         JLabel intro = new JLabel("Introduction*", JLabel.CENTER);
-        intro.setBounds(0, 330, 100, 26);
+        intro.setBounds(0, 360, 100, 26);
         container.add(intro);
 
         JTextArea introFill = new JTextArea();
-        introFill.setBounds(100, 330, 300, 130);
+        introFill.setBounds(100, 360, 300, 130);
         container.add(introFill);
 
         //Button
         JButton clear = new JButton("CLEAR ALL");
-        clear.setBounds(70, 470, 140, 30);
+        clear.setBounds(70, 500, 140, 30);
         container.add(clear);
 
         JButton submit = new JButton("REGISTER!");
-        submit.setBounds(250, 470, 140, 30);
+        submit.setBounds(250, 500, 140, 30);
         container.add(submit);
         //
         clear.addMouseListener(new MouseAdapter() {
@@ -306,22 +338,22 @@ public class RegisterWindow {
                         ResultSet result = statement.executeQuery();
                         if (result.next()) {
                             //fail
-                            Login.ErrorDialog ed = new Login.ErrorDialog(Jframe, "This username or email has been used!");
+                            ErrorDialog ed = new ErrorDialog(Jframe, "This username or email has been used!");
                         } else {
                             // Valid!
                             sql = "insert into users (username, password, age, sex, email, country, city, introduction) " +
                                     "values(?,?,?,?,?,?,?,?)";
                             PreparedStatement statement1 = connection.prepareStatement(sql);
                             try {
-                                statement1.setObject(1,s1);
-                                statement1.setObject(2,s2);
-                                statement1.setObject(3,age);
-                                statement1.setObject(4,sex);
-                                statement1.setObject(5,email);
-                                statement1.setObject(6,country);
-                                statement1.setObject(7,city);
-                                statement1.setObject(8,intro);
-                            } catch (SQLException ee){
+                                statement1.setObject(1, s1);
+                                statement1.setObject(2, s2);
+                                statement1.setObject(3, age);
+                                statement1.setObject(4, sex);
+                                statement1.setObject(5, email);
+                                statement1.setObject(6, country);
+                                statement1.setObject(7, city);
+                                statement1.setObject(8, intro);
+                            } catch (SQLException ee) {
                                 ee.printStackTrace();
                             }
 
@@ -359,4 +391,20 @@ public class RegisterWindow {
         });
         Jframe.add(container);
     }
+
+    public class ErrorDialog extends JDialog {
+        public ErrorDialog(JFrame parent, String message) {
+            super(parent, "Error", true);
+            setBounds(parent.getX() + 200, parent.getY() + 200, 300, 150);
+            setLayout(new BorderLayout());
+
+            JLabel errorMessage = new JLabel(message, SwingConstants.CENTER);
+            JButton okButton = new JButton("OK");
+            okButton.addActionListener(e -> dispose());
+
+            add(errorMessage, BorderLayout.CENTER);
+            add(okButton, BorderLayout.SOUTH);
+        }
+    }
+
 }

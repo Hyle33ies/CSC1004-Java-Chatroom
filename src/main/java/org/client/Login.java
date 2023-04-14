@@ -4,7 +4,6 @@ import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.client.tools.Message;
 
-import java.awt.Checkbox;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,178 +15,107 @@ import java.net.Socket;
 import java.nio.file.Paths;
 import java.sql.*;
 
-/**
- * User: HP
- * Date: 2023/3/3
- * WELCOME!
- */
 public class Login {
-    private Frame frame;
-    protected JDialog dialog;
-    Connection connection;
+    private JFrame frame;
+    private JDialog dialog;
+    private Connection connection;
 
     public Login() throws SQLException {
         connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
     }
 
-    private void ExitConfirm() {
-        //Dialog of closing
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = (int) ((screenSize.getWidth() - frame.getWidth()) / 2);
-        int y = (int) ((screenSize.getHeight() - frame.getHeight()) / 2);
-        dialog = new JDialog(frame, "Close Chatroom?", true);
-        dialog.setBounds(x - 50, y - 50, 200, 100);
-        dialog.setResizable(false);
-        dialog.add(new Label("Do you want to exit?"), BorderLayout.NORTH);
-        Button ExitYes = new Button("Yes");
-        ExitYes.setPreferredSize(new Dimension(100, 50));
-        Button ExitNo = new Button("No");
-        ExitNo.setPreferredSize(new Dimension(100, 50));
-        ExitYes.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                frame.dispose();
-                System.exit(0);
-            }
-        });
-        ExitNo.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                dialog.dispose();
-            }
-        });
-        dialog.add(ExitYes, BorderLayout.WEST);
-        dialog.add(ExitNo, BorderLayout.EAST);
-    }
-
     public void start() {
-        frame = new Frame();
-        ExitConfirm();//init confirm information
-        //basic setup
-        frame.setBackground(Color.gray);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = (int) ((screenSize.getWidth() - frame.getWidth()) / 2);
-        int y = (int) ((screenSize.getHeight() - frame.getHeight()) / 2);
-        frame.setBounds(x - 250, y - 150, 500, 300);
-        frame.setResizable(false);
-        frame.setAlwaysOnTop(true);
-        frame.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        frame.setTitle("Welcome to Chatroom v1.0");
-        frame.setVisible(true);
-        //listener
+        frame = new JFrame("Welcome to Chatroom v1.1.15");
+//        createExitConfirmDialog();
+
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                frame.dispose();
+//                dialog.setVisible(true);
+                ExitConfirmDialog.showExitConfirmDialog(frame);
             }
+        });
 
-            @Override
-            public void windowClosed(WindowEvent e) {
-                frame.dispose();
-            }
-        });
-        //layout
-        //login and register button
-        frame.setLayout(null);
-        Label label1 = new Label("Login", Label.CENTER);
-        Label label2 = new Label("Register", Label.CENTER);
-        label2.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                RegisterWindow Register;
-                try {
-                    Register = new RegisterWindow();
-                } catch (ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                }
-                Register.start();
-            }
-        });
-        label1.setBackground(Color.DARK_GRAY);
-        label2.setBackground(Color.DARK_GRAY);
-        label1.setForeground(Color.WHITE);
-        label2.setForeground(Color.WHITE);
-        label1.setLocation(100, 200);
-        label2.setLocation(300, 200);
-        label1.setSize(100, 30);
-        label2.setSize(100, 30);
-        frame.add(label1);
-        frame.add(label2);
-        //user and password
-        TextField field1 = new TextField();
-        field1.setBounds(170, 100, 200, 25);
-        frame.add(field1);
-        TextField field2 = new TextField();
-        field2.setEchoChar('*');
-        field2.setBounds(170, 150, 200, 25);
-        frame.add(field2);
-        Label label3 = new Label("username", Label.CENTER);
-        label3.setBounds(100, 100, 80, 25);
-        label3.setBackground(Color.lightGray);
-        frame.add(label3);
-        Label label4 = new Label("password", Label.CENTER);
-        label4.setBounds(100, 150, 80, 25);
-        label4.setBackground(Color.lightGray);
-        frame.add(label4);
-        //checkbox
-        Checkbox checkbox = new Checkbox("remember me");
-        checkbox.setBounds(390, 140, 100, 50);
-        frame.add(checkbox);
+        frame.setSize(500, 300);
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
+        frame.setAlwaysOnTop(true);
+
+        initComponents();
+
+        frame.setVisible(true);
+    }
+
+    private void initComponents() {
+        frame.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        // Username label and text field
+        JLabel usernameLabel = new JLabel("Username:");
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(10, 10, 10, 10);
+        frame.add(usernameLabel, c);
+
+        JTextField usernameField = new JTextField(20);
+        c.gridx = 1;
+        c.gridy = 0;
+        frame.add(usernameField, c);
+
+        // Password label and text field
+        JLabel passwordLabel = new JLabel("Password:");
+        c.gridx = 0;
+        c.gridy = 1;
+        frame.add(passwordLabel, c);
+
+        JPasswordField passwordField = new JPasswordField(20);
+        c.gridx = 1;
+        c.gridy = 1;
+        frame.add(passwordField, c);
+
+        // Remember me checkbox
+        JCheckBox rememberMeCheckBox = new JCheckBox("Remember me");
+        c.gridx = 1;
+        c.gridy = 2;
+        frame.add(rememberMeCheckBox, c);
+
         try {
-            boolean rememberedUserExists = loadRememberedUser(field1, field2);
-            checkbox.setState(rememberedUserExists);
+            boolean rememberedUserExists = loadRememberedUser(usernameField, passwordField);
+            rememberMeCheckBox.setSelected(rememberedUserExists);
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-        //Menubar
-        MenuBar bar = new MenuBar();
-        Menu menu1 = new Menu("HELP");
-        MenuItem menuExit = new MenuItem("Exit");
-        menuExit.addActionListener(e -> dialog.setVisible(true));
-        MenuItem menuReadMe = new MenuItem("ReadMe");
-        menuReadMe.addActionListener(e -> {
+
+        // Login and Register buttons
+        JButton loginButton = new JButton("Login");
+        c.gridx = 0;
+        c.gridy = 3;
+        c.gridwidth = 1;
+        frame.add(loginButton, c);
+
+        JButton registerButton = new JButton("Register");
+        c.gridx = 1;
+        c.gridy = 3;
+        frame.add(registerButton, c);
+
+        // Add action listeners
+        loginButton.addActionListener(e -> handleLogin(usernameField, passwordField, rememberMeCheckBox));
+        registerButton.addActionListener(e -> {
             try {
-                File readmeFile = Paths.get("resources", "readme.md").toFile();
-                Desktop.getDesktop().open(readmeFile);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        });
-        menu1.add(menuExit);
-        menu1.add(menuReadMe);
-        Menu menu2 = new Menu("FUNCTION");
-        MenuItem menuRegister = new MenuItem("Register a new user for free");
-        menuRegister.addActionListener(e -> {
-            RegisterWindow Register;
-            try {
-                Register = new RegisterWindow();
+                openRegisterWindow();
             } catch (ClassNotFoundException ex) {
                 throw new RuntimeException(ex);
             }
-            Register.start();
         });
-        MenuItem menuForgetPassword = new MenuItem("I forget my password!");
-        //TODO Find back your account (not required)
-        menu2.add(menuRegister);
-        menu2.add(menuForgetPassword);
-        bar.add(menu1);
-        bar.add(menu2);
-        frame.setMenuBar(bar);
-        //PopMenu, but not very useful after implementing
-        PopupMenu popMenu = new PopupMenu();
-        MenuItem menuExitPop = new MenuItem("Exit");
-        menuExitPop.addActionListener(e -> dialog.setVisible(true));
-        MenuItem menuReadMePop = new MenuItem("ReadMe");
-        popMenu.add(menuExitPop);
-        popMenu.add(menuReadMePop);
-        frame.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON3)
-                    popMenu.show(frame, e.getX(), e.getY());
-            }
-        });
-        menuReadMePop.addActionListener(e -> {
+
+        // Menu bar
+        JMenuBar menuBar = new JMenuBar();
+        JMenu helpMenu = new JMenu("Help");
+        JMenuItem exitMenuItem = new JMenuItem("Exit");
+        exitMenuItem.addActionListener(e -> ExitConfirmDialog.showExitConfirmDialog(frame));
+        JMenuItem readmeMenuItem = new JMenuItem("ReadMe");
+        readmeMenuItem.addActionListener(e -> {
             try {
                 File readmeFile = Paths.get("resources", "readme.md").toFile();
                 Desktop.getDesktop().open(readmeFile);
@@ -195,61 +123,112 @@ public class Login {
                 ex.printStackTrace();
             }
         });
-        frame.add(popMenu);
-        //close
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                dialog.setVisible(true);
+
+        helpMenu.add(exitMenuItem);
+        helpMenu.add(readmeMenuItem);
+
+        JMenu functionMenu = new JMenu("Function");
+        JMenuItem registerMenuItem = new JMenuItem("Register a new user for free");
+        registerMenuItem.addActionListener(e -> {
+            try {
+                openRegisterWindow();
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
             }
         });
 
-        //Part2: login verification
-        label1.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // Verify the user's password!
-                String s1 = field1.getText(); // Username
-                String s2 = field2.getText(); // Password
-                Message messageLogin = new Message();
-                messageLogin.setSender(s1);
-                messageLogin.setMesType(MessageType.MESSAGE_LOGIN_ATTEMPT);
-                messageLogin.setContent(s2);
-                //send message to server
-                try (Socket socket = new Socket("localhost", 8889)) {
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                    oos.writeObject(messageLogin);
-                    oos.flush();
-                    //receive message from server
-                    Message messageLogin1 = (Message) ois.readObject();
-                    if (messageLogin1.getMesType().equals(MessageType.MESSAGE_LOGIN_SUCCESSFUL)) {
-                        User loginUser = messageLogin1.getUser();
-                        Chatroom chatroom = new Chatroom(loginUser);
-                        chatroom.start();
-                        frame.setVisible(false);
-                        try {
-                            if (checkbox.getState()) {
-                                // If client ticks the checkbox, delete the former stored information,
-                                deleteRememberedUser();
-                                // Save the new one
-                                saveRememberedUser(s1, s2);
-                            } else {
-                                // If no, delete the information formerly stored if exists
-                                deleteRememberedUser();
-                            }
-                        } catch (SQLException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }else{
-                        new ErrorDialog(frame, "Wrong username or password!");
+        JMenuItem forgetPasswordMenuItem = new JMenuItem("I forgot my password!");
+
+        functionMenu.add(registerMenuItem);
+        functionMenu.add(forgetPasswordMenuItem);
+
+        menuBar.add(helpMenu);
+        menuBar.add(functionMenu);
+        frame.setJMenuBar(menuBar);
+    }
+
+    private void handleLogin(JTextField usernameField, JPasswordField passwordField, JCheckBox rememberMeCheckBox) {
+        // Verify the user's password!
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+        Message messageLogin = new Message();
+        messageLogin.setSender(username);
+        messageLogin.setMesType(MessageType.MESSAGE_LOGIN_ATTEMPT);
+        messageLogin.setContent(password);
+
+        // Send message to server
+        try (Socket socket = new Socket("localhost", 8889)) {
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            oos.writeObject(messageLogin);
+            oos.flush();
+
+            // Receive message from server
+            Message messageLogin1 = (Message) ois.readObject();
+            if (messageLogin1.getMesType().equals(MessageType.MESSAGE_LOGIN_SUCCESSFUL)) {
+                User loginUser = messageLogin1.getUser();
+                Chatroom chatroom = new Chatroom(loginUser);
+                chatroom.start();
+                frame.setVisible(false);
+                try {
+                    if (rememberMeCheckBox.isSelected()) {
+                        // If client ticks the checkbox, delete the former stored information,
+                        deleteRememberedUser();
+                        // Save the new one
+                        saveRememberedUser(username, password);
+                    } else {
+                        // If no, delete the information formerly stored if exists
+                        deleteRememberedUser();
                     }
-                } catch (IOException | ClassNotFoundException ex) {
+                } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
+            } else {
+                showErrorDialog("Wrong username or password!");
             }
-        });
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
     }
+
+    private void openRegisterWindow() throws ClassNotFoundException {
+        RegisterWindow register;
+        register = new RegisterWindow();
+        register.start();
+    }
+
+    private void showErrorDialog(String message) {
+        JOptionPane.showMessageDialog(frame, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    private void saveRememberedUser(String username, String password) throws SQLException {
+        String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?)";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setString(1, username);
+        statement.setString(2, password);
+        statement.executeUpdate();
+    }
+
+    @SuppressWarnings("All")
+    private void deleteRememberedUser() throws SQLException {
+        String sql = "DELETE FROM user_remember"; // Exactly delete everything
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.executeUpdate();
+    }
+
+    private boolean loadRememberedUser(JTextField field1,JTextField field2) throws SQLException {
+        String sql = "SELECT * FROM user_remember";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        ResultSet result = statement.executeQuery();
+        if (result.next()) {
+            field1.setText(result.getString("username"));
+            field2.setText(result.getString("password"));
+            System.out.println("Loaded user");
+            return true;
+        }
+        System.out.println("No remembered user");
+        return false;
+    }
+    @Deprecated
     static class ErrorDialog extends JDialog {
         // Just a simple Dialog
         public ErrorDialog(Frame parent, String message) {
@@ -269,34 +248,71 @@ public class Login {
             setVisible(true);
         }
     }
+    /*
+        * This class is used to show a confirmation dialog when user tries to exit the application.
+        * If user clicks "Yes", the application will exit.
+        * If user clicks "No", the dialog will be closed.
+     */
+    public static class ExitConfirmDialog {
+        public static void main(String[] args) {
+            JFrame frame = new JFrame("My Application");
+            frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            frame.setSize(300, 200);
+            frame.setLocationRelativeTo(null);
 
-    private void saveRememberedUser(String username, String password) throws SQLException {
-        String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?)";
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.setString(1, username);
-        statement.setString(2, password);
-        statement.executeUpdate();
-    }
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    showExitConfirmDialog(frame);
+                }
+            });
 
-    @SuppressWarnings("All")
-    private void deleteRememberedUser() throws SQLException {
-        String sql = "DELETE FROM user_remember"; // Exactly delete everything
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.executeUpdate();
-    }
-
-    private boolean loadRememberedUser(TextField field1,TextField field2) throws SQLException {
-        String sql = "SELECT * FROM user_remember";
-        PreparedStatement statement = connection.prepareStatement(sql);
-        ResultSet result = statement.executeQuery();
-        if (result.next()) {
-            field1.setText(result.getString("username"));
-            field2.setText(result.getString("password"));
-            System.out.println("Loaded user");
-            return true;
+            frame.setVisible(true);
         }
-        System.out.println("No remembered user");
-        return false;
+
+        protected static void showExitConfirmDialog(JFrame frame) {
+            int option = JOptionPane.showConfirmDialog(
+                    frame,
+                    "Do you want to exit?",
+                    "Exit Confirmation",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (option == JOptionPane.YES_OPTION) {
+                frame.dispose();
+            }
+        }
     }
 
+    @Deprecated
+    // An old version of ExitConfirmDialog, but too ugly
+    private void createExitConfirmDialog() {
+        dialog = new JDialog(frame, "Close Chatroom?", true);
+        dialog.setSize(200, 100);
+        dialog.setLocationRelativeTo(frame);
+        dialog.setResizable(false);
+        dialog.setLayout(new BorderLayout());
+
+        JLabel questionLabel = new JLabel("Do you want to exit?", JLabel.CENTER);
+        dialog.add(questionLabel, BorderLayout.NORTH);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+
+        JButton exitYesButton = new JButton("Yes");
+        exitYesButton.setPreferredSize(new Dimension(100, 50));
+        exitYesButton.addActionListener(e -> {
+            frame.dispose();
+            System.exit(0);
+        });
+
+        JButton exitNoButton = new JButton("No");
+        exitNoButton.setPreferredSize(new Dimension(100, 50));
+        exitNoButton.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(exitYesButton);
+        buttonPanel.add(exitNoButton);
+        dialog.add(buttonPanel, BorderLayout.CENTER);
+    }
 }
