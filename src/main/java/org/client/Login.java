@@ -14,11 +14,13 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class Login {
     private JFrame frame;
     private JDialog dialog;
-    private Connection connection;
+    private final Connection connection;
 
     public Login() throws SQLException {
         connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
@@ -26,13 +28,11 @@ public class Login {
 
     public void start() {
         frame = new JFrame("Welcome to Chatroom v1.1.15");
-//        createExitConfirmDialog();
 
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-//                dialog.setVisible(true);
                 ExitConfirmDialog.showExitConfirmDialog(frame);
             }
         });
@@ -47,8 +47,19 @@ public class Login {
         frame.setVisible(true);
     }
 
-    private void initComponents() {
+    protected void initComponents() {
         frame.setLayout(new GridBagLayout());
+        AnimatedBackgroundPanel backgroundPanel = new AnimatedBackgroundPanel();
+        backgroundPanel.setOpaque(false);
+        frame.setContentPane(backgroundPanel);
+
+        // Create a transparent panel for login components
+        JPanel loginPanel = new JPanel();
+        loginPanel.setOpaque(false);
+        frame.add(loginPanel);
+
+        // Update the layout manager for loginPanel
+        loginPanel.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
         // Username label and text field
@@ -56,29 +67,43 @@ public class Login {
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(10, 10, 10, 10);
-        frame.add(usernameLabel, c);
+        loginPanel.add(usernameLabel, c);
 
         JTextField usernameField = new JTextField(20);
         c.gridx = 1;
         c.gridy = 0;
-        frame.add(usernameField, c);
+        loginPanel.add(usernameField, c);
 
         // Password label and text field
         JLabel passwordLabel = new JLabel("Password:");
         c.gridx = 0;
         c.gridy = 1;
-        frame.add(passwordLabel, c);
+        loginPanel.add(passwordLabel, c);
 
         JPasswordField passwordField = new JPasswordField(20);
         c.gridx = 1;
         c.gridy = 1;
-        frame.add(passwordField, c);
+        loginPanel.add(passwordField, c);
 
         // Remember me checkbox
-        JCheckBox rememberMeCheckBox = new JCheckBox("Remember me");
+        JCheckBox rememberMeCheckBox = new JCheckBox("Remember The Password");
+        c.gridx = 2;
+        c.gridy = 2;
+        loginPanel.add(rememberMeCheckBox, c);
+
+        JCheckBox animationCheckBox = new JCheckBox("Enable Animation");
+        animationCheckBox.setSelected(true);
         c.gridx = 1;
         c.gridy = 2;
-        frame.add(rememberMeCheckBox, c);
+        loginPanel.add(animationCheckBox, c);
+
+        animationCheckBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                backgroundPanel.setAnimationEnabled(true);
+            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                backgroundPanel.setAnimationEnabled(false);
+            }
+        });
 
         try {
             boolean rememberedUserExists = loadRememberedUser(usernameField, passwordField);
@@ -90,17 +115,20 @@ public class Login {
         // Login and Register buttons
         JButton loginButton = new JButton("Login");
         c.gridx = 0;
-        c.gridy = 3;
+        c.gridy = 4;
         c.gridwidth = 1;
-        frame.add(loginButton, c);
+        loginPanel.add(loginButton, c);
 
         JButton registerButton = new JButton("Register");
         c.gridx = 1;
-        c.gridy = 3;
-        frame.add(registerButton, c);
+        c.gridy = 4;
+        loginPanel.add(registerButton, c);
 
-        // Add action listeners
-        loginButton.addActionListener(e -> handleLogin(usernameField, passwordField, rememberMeCheckBox));
+        JButton forgetPasswordButton = new JButton("Password Recovery");
+        c.gridx = 2;
+        c.gridy = 4;
+        loginPanel.add(forgetPasswordButton, c);
+
         registerButton.addActionListener(e -> {
             try {
                 openRegisterWindow();
@@ -108,6 +136,43 @@ public class Login {
                 throw new RuntimeException(ex);
             }
         });
+
+        forgetPasswordButton.addActionListener(e -> {
+            //                openForgetPasswordWindow(); TODO
+            showErrorDialog("This feature is not available yet. Stay tuned!");
+        });
+
+        // Add Verification Code label, text field, and displayed verification code
+        JLabel verificationCodeLabel = new JLabel("Verification:");
+        c.gridx = 0;
+        c.gridy = 3;
+        loginPanel.add(verificationCodeLabel, c);
+
+        JTextField verificationCodeField = new JTextField(10);
+        c.gridx = 1;
+        c.gridy = 3;
+        c.gridwidth = 1;
+        loginPanel.add(verificationCodeField, c);
+
+        JLabel displayedVerificationCode = new JLabel();
+        displayedVerificationCode.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        displayedVerificationCode.setHorizontalAlignment(JLabel.CENTER);
+        displayedVerificationCode.setPreferredSize(new Dimension(100, 30));
+        String[] initialVerificationCode = new String[]{generateVerificationCode()};
+        displayedVerificationCode.setText(initialVerificationCode[0]);
+        c.gridx = 2;
+        c.gridy = 3;
+        loginPanel.add(displayedVerificationCode, c);
+
+        displayedVerificationCode.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                initialVerificationCode[0] = generateVerificationCode();
+                displayedVerificationCode.setText(initialVerificationCode[0]);
+            }
+        });
+
+        loginButton.addActionListener(e -> handleLogin(usernameField, passwordField, rememberMeCheckBox, verificationCodeField, initialVerificationCode[0]));
 
         // Menu bar
         JMenuBar menuBar = new JMenuBar();
@@ -147,7 +212,12 @@ public class Login {
         frame.setJMenuBar(menuBar);
     }
 
-    private void handleLogin(JTextField usernameField, JPasswordField passwordField, JCheckBox rememberMeCheckBox) {
+    private void handleLogin(JTextField usernameField, JPasswordField passwordField, JCheckBox rememberMeCheckBox, JTextField verificationCodeField, String verificationCode) {
+        // Check if the entered verification code is correct
+        if (!verificationCodeField.getText().equalsIgnoreCase(verificationCode)) {
+            showErrorDialog("Incorrect verification code!");
+            return;
+        }
         // Verify the user's password!
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
@@ -285,8 +355,8 @@ public class Login {
         }
     }
 
-    @Deprecated
     // An old version of ExitConfirmDialog, but too ugly
+    @Deprecated
     private void createExitConfirmDialog() {
         dialog = new JDialog(frame, "Close Chatroom?", true);
         dialog.setSize(200, 100);
@@ -314,5 +384,100 @@ public class Login {
         buttonPanel.add(exitYesButton);
         buttonPanel.add(exitNoButton);
         dialog.add(buttonPanel, BorderLayout.CENTER);
+    }
+
+    private String generateVerificationCode() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        int length = 5;
+        Random random = new Random();
+        StringBuilder verificationCode = new StringBuilder();
+
+        for (int i = 0; i < length; i++) {
+            verificationCode.append(characters.charAt(random.nextInt(characters.length())));
+        }
+
+        return verificationCode.toString();
+    }
+
+    // A custom JPanel class for the background animation
+    static class AnimatedBackgroundPanel extends JPanel {
+        private static final int BALL_COUNT = 50;
+        private static final int MAX_SPEED = 5;
+
+        private java.util.List<Ball> balls = new ArrayList<>();
+        private boolean animationEnabled = true;
+
+        public AnimatedBackgroundPanel() {
+            for (int i = 0; i < BALL_COUNT; i++) {
+                balls.add(new Ball(getRandomNumber(0, getWidth()), getRandomNumber(0, getHeight())));
+            }
+
+            Timer timer = new Timer(20, e -> moveBallsAndUpdateUI());
+            timer.start();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            if (animationEnabled) {
+                for (Ball ball : balls) {
+                    ball.paint(g);
+                }
+            }
+        }
+
+        private void moveBallsAndUpdateUI() {
+            for (Ball ball : balls) {
+                ball.move();
+                ball.checkBounds(getWidth(), getHeight());
+            }
+            repaint();
+        }
+
+        public void setAnimationEnabled(boolean enabled) {
+            animationEnabled = enabled;
+            repaint();
+        }
+
+        private int getRandomNumber(int min, int max) {
+            return (int) (Math.random() * (max - min + 1) + min);
+        }
+
+        class Ball {
+            int x;
+            int y;
+            int speedX;
+            int speedY;
+            int size;
+
+            public Ball(int x, int y) {
+                this.x = x;
+                this.y = y;
+                this.speedX = getRandomNumber(-MAX_SPEED, MAX_SPEED);
+                this.speedY = getRandomNumber(-MAX_SPEED, MAX_SPEED);
+                this.size = getRandomNumber(5, 10);
+            }
+
+            public void move() {
+                x += speedX;
+                y += speedY;
+            }
+
+            public void checkBounds(int width, int height) {
+                if (x < 0 || x + size > width) {
+                    speedX = -speedX;
+                }
+
+                if (y < 0 || y + size > height) {
+                    speedY = -speedY;
+                }
+            }
+
+            public void paint(Graphics g) {
+                g.setColor(Color.BLACK);
+                g.fillOval(x, y, size, size);
+            }
+        }
     }
 }

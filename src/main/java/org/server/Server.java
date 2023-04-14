@@ -123,9 +123,7 @@ public class Server {
                                 int updatedPort = Integer.parseInt(message.getContent());
                                 updatePort(username, updatedPort);
                             }
-                            case MessageType.MESSAGE_UPDATE_OUTPUT_STREAM -> {
-                                updateOutputStream(message.getSender(), outputStream);
-                            }
+                            case MessageType.MESSAGE_UPDATE_OUTPUT_STREAM -> updateOutputStream(message.getSender(), outputStream);
                             case MessageType.MESSAGE_FILE_TRANSFER -> {
                                 System.out.println("This file is for: " + message.getGetter());
                                 UserConnection targetUserConnection = null;
