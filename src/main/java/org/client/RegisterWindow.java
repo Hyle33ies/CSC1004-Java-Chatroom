@@ -7,7 +7,6 @@ import java.sql.*;
 import java.util.ArrayList;
 
 import org.Setting.Network_setting.Network_Setting;
-import org.client.tools.User;
 
 /**
  * User: HP
@@ -341,7 +340,7 @@ public class RegisterWindow {
                     });
                 } else {
                     //valid information!
-                    User newUser = new User(s1, s2, age, sex, email, country, city, intro);
+//                    User newUser = new User(s1, s2, age, sex, email, country, city, intro);
                     Connection connection;
                     try {
                         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -442,7 +441,7 @@ public class RegisterWindow {
         private static final int BALL_COUNT = 40;
         private static final int MAX_SPEED = 4;
 
-        private java.util.List<Ball> balls = new ArrayList<>();
+        private final java.util.List<Ball> balls = new ArrayList<>();
 
         public AnimatedBackgroundPanel2() {
             for (int i = 0; i < BALL_COUNT; i++) {

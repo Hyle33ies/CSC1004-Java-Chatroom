@@ -33,25 +33,15 @@ public class Network_setting {
             return Personalized_setting;
         }
 
-        public void setPersonalized_setting(String personalized_setting) {
-            Personalized_setting = personalized_setting;
-        }
-
         public String getPersonalized_username() {
             return Personalized_username;
         }
 
-        public void setPersonalized_username(String personalized_username) {
-            Personalized_username = personalized_username;
-        }
 
         public String getPersonalized_password() {
             return Personalized_password;
         }
 
-        public void setPersonalized_password(String personalized_password) {
-            Personalized_password = personalized_password;
-        }
     }
 
 }

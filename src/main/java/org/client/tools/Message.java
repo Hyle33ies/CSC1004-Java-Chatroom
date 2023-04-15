@@ -20,15 +20,15 @@ public class Message implements Serializable {
     private ArrayList<UserConnection> userList;
     private String sendTime;
     private String fileName;
-    private String fileExtension;
     public boolean isImage = false;
+    private String FileExtension;
 
     public String getFileExtension() {
-        return fileExtension;
+        return FileExtension;
     }
 
     public void setFileExtension(String fileExtension) {
-        this.fileExtension = fileExtension;
+        FileExtension = fileExtension;
     }
 
     public String getFileName() {

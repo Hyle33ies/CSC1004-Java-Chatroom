@@ -231,22 +231,13 @@ public class Login {
             JButton confirmButton = new JButton("Confirm");
             contentPanel.add(confirmButton);
 
-            confirmButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String setting = settingField.getText();
-                    String username = usernameField1.getText();
-                    String password = new String(passwordField1.getPassword());
+            confirmButton.addActionListener(e1 -> {
+                String setting = settingField.getText();
+                String username = usernameField1.getText();
+                String password = new String(passwordField1.getPassword());
 
-                    Network_Setting ns = new Network_Setting(setting,username,password);
-                    // Store the collected information into variables as needed
-                    // For example:
-                    // dbSetting = setting;
-                    // dbUsername = username;
-                    // dbPassword = password;
-
-                    databaseSettingDialog.dispose();
-                }
+                Network_Setting ns = new Network_Setting(setting,username,password);
+                databaseSettingDialog.dispose();
             });
 
             databaseSettingDialog.add(contentPanel, BorderLayout.CENTER);
@@ -485,7 +476,7 @@ public class Login {
         private static final int BALL_COUNT = 50;
         private static final int MAX_SPEED = 5;
 
-        private java.util.List<Ball> balls = new ArrayList<>();
+        private final java.util.List<Ball> balls = new ArrayList<>();
         private boolean animationEnabled = true;
 
         public AnimatedBackgroundPanel() {
