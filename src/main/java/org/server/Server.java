@@ -182,6 +182,14 @@ public class Server {
         // Send back the list except the user him/herself
         ArrayList<UserConnection> onlineFriends = new ArrayList<>(connectedUsers);
         onlineFriends.removeIf(userConnection -> userConnection.getUser().getUsername().equals(requesterUsername));
+        //Check if there are one user appear two times, if so remove anyone of them
+        for (int i = 0; i < onlineFriends.size(); i++) {
+            for (int j = i + 1; j < onlineFriends.size(); j++) {
+                if (onlineFriends.get(i).getUser().getUsername().equals(onlineFriends.get(j).getUser().getUsername())) {
+                    onlineFriends.remove(j);
+                }
+            }
+        }
 
         System.out.println("Online friends: " + onlineFriends);
         onlineFriendsMessage.setUserList(onlineFriends);

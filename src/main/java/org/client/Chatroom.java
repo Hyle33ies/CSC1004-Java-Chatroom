@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Chatroom extends JFrame {
 
@@ -35,7 +37,7 @@ public class Chatroom extends JFrame {
     private DefaultListModel<User> friendsListModel = new DefaultListModel<>();
     private JScrollPane messageScrollPane;
     private JTextPane messagePane;
-    private JTextArea messageField;
+    private JTextPane messageField;
     private JLabel chatWithLabel;
     private JPanel chatWithPanel;
     private Map<String, JTextPane> userChatPanes;
@@ -342,7 +344,8 @@ public class Chatroom extends JFrame {
 
         //Typing area
         JPanel typingPanel = new JPanel(new BorderLayout());
-        messageField = new JTextArea(3, 50);
+        messageField = new JTextPane();
+        messageField.setContentType("text/html");
         JScrollPane typingScrollPane = new JScrollPane(messageField);
         typingPanel.add(typingScrollPane, BorderLayout.CENTER);
 
@@ -365,12 +368,28 @@ public class Chatroom extends JFrame {
             }
         });
 
-        //TODO maybe no: Emoji Function
+        //TODO Emoji Function
         JButton emojiButton = new JButton("Emoji");
         emojiButton.setPreferredSize(new Dimension(80, 20));
         // Add actionListener for emojiButton here
+        emojiButton.addActionListener(e -> {
+            JDialog emojiDialog = new JDialog(mainFrame, "Emoji", false);
+            emojiDialog.setSize(430, 300); // Adjust the width to accommodate four emojis per row
+            emojiDialog.setLocationRelativeTo(mainFrame);
 
-        //TODO Message History
+            JPanel emojiPanel = new JPanel();
+            emojiPanel.setLayout(new GridLayout(0, 4)); // Set the number of columns to 4
+
+            // Add emojis to the emojiPanel
+            addEmojis(emojiPanel);
+
+            JScrollPane scrollPane = new JScrollPane(emojiPanel);
+            scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); // Prevent horizontal scrolling
+            emojiDialog.add(scrollPane);
+            emojiDialog.setVisible(true);
+        });
+
+        //Message History
         JButton historyButton = new JButton("History");
         historyButton.addActionListener(e -> {
             JFrame historyFrame = new JFrame("History");
@@ -406,7 +425,7 @@ public class Chatroom extends JFrame {
                         String sendTime = resultSet.getString("send_time");
 
                         String color = sender.equals(current_user.getUsername()) ? "blue" : "green";
-                        String formattedMessage = "<font color=\"" + color + "\"><b>" + sender + " [" + sendTime + "]:</b></font> " + content.replace("\n", "<br>") + "<br>";
+                        String formattedMessage = "<font color=\"" + color + "\"><b>" + sender + " [" + sendTime + "]:</b></font> " + replaceEmojiWithHTML(content).replace("\n", "<br>") + "<br>";
                         historyText.append(formattedMessage);
                     }
 
@@ -423,7 +442,7 @@ public class Chatroom extends JFrame {
             historyFrame.setVisible(true);
         });
 
-        Dimension buttonSize = new Dimension(80, 20);
+        Dimension buttonSize = new Dimension(80, 22);
         sendFilesButton.setMaximumSize(buttonSize);
         emojiButton.setMaximumSize(buttonSize);
         historyButton.setMaximumSize(buttonSize);
@@ -525,14 +544,30 @@ public class Chatroom extends JFrame {
         }
 
         // Update the local chat pane
-        String formattedMessage = "<font color=\"blue\"><b>" + current_user.getUsername() + " [" + now.format(formatter) + "]:</b></font> " + message.replace("\n", "<br>") + "<br>";
+        String formattedMessage = "<font color=\"blue\"><b>" + current_user.getUsername() + " [" + now.format(formatter) + "]:</b></font> " + replaceEmojiWithHTML(message).replace("\n", "<br>") + "<br>";
         chatPane.setContentType("text/html");
         String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
         chatPane.setText(currentText + formattedMessage + "</body></html>");
 
         messageField.setText("");
-        messageField.setLineWrap(true);
-        messageField.setWrapStyleWord(true);
+//        messageField.setLineWrap(true);
+//        messageField.setWrapStyleWord(true);
+    }
+
+    private String replaceEmojiWithHTML(String content) {
+        String regex = "emoji_\\d+\\.(?:png|jpg|jpeg|gif|bmp|tiff|tif)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(content);
+
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String emojiFilename = matcher.group();
+            String emojiPath = "resources/emoji/" + emojiFilename;
+            String imgTag = "<img src=\"" + emojiPath + "\" width=\"20\" height=\"20\">";
+            matcher.appendReplacement(result, imgTag);
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
 
@@ -707,7 +742,9 @@ public class Chatroom extends JFrame {
                             // Update the chat pane for the sender
                             SwingUtilities.invokeLater(() -> {
                                 JTextPane chatPane = getChatPaneForUser(sender);
-                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + sendTime + "]:</b></font> " + messageContent.replace("\n", "<br>") + "<br>";
+                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + sendTime +
+                                        "]:</b></font> " + replaceEmojiWithHTML(messageContent).
+                                        replace("\n", "<br>") + "<br>";
                                 chatPane.setContentType("text/html");
                                 String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
                                 chatPane.setText(currentText + formattedMessage + "</body></html>");
@@ -863,4 +900,33 @@ public class Chatroom extends JFrame {
             e.printStackTrace();
         }
     }
+
+    private void addEmojis(JPanel emojiPanel) {
+        File emojiFolder = new File("resources/emoji");
+        File[] emojiFiles = emojiFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".png")
+            || name.toLowerCase().endsWith(".jpg")
+            || name.toLowerCase().endsWith(".jpeg")
+            || name.toLowerCase().endsWith(".gif")
+            || name.toLowerCase().endsWith(".bmp")
+            || name.toLowerCase().endsWith(".tiff")
+            || name.toLowerCase().endsWith(".tif"));
+
+        if (emojiFiles != null) {
+            for (File emojiFile : emojiFiles) {
+                try {
+                    BufferedImage emojiImage = ImageIO.read(emojiFile);
+                    ImageIcon emojiIcon = new ImageIcon(emojiImage.getScaledInstance(64, 64, Image.SCALE_SMOOTH));
+                    JButton emojiButton = new JButton(emojiIcon);
+                    emojiButton.addActionListener(e -> {
+                        // Insert the emoji into the messageField as an image
+                        messageField.insertIcon(emojiIcon);
+                    });
+                    emojiPanel.add(emojiButton);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 }
