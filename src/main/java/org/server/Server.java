@@ -147,6 +147,29 @@ public class Server {
                                     System.out.println("Target user not found or not online.");
                                 }
                             }
+                            case MessageType.MESSAGE_EMOJI -> {
+                                System.out.println("This Emoji is for: " + message.getGetter());
+                                UserConnection targetUserConnection = null;
+                                for (UserConnection userConnection : connectedUsers) {
+                                    if (userConnection.getUser().getUsername().equals(message.getGetter())) {
+                                        targetUserConnection = userConnection;
+                                        break;
+                                    }
+                                }
+                                System.out.println(targetUserConnection.toString());
+                                if (targetUserConnection != null) {
+                                    try {
+                                        ObjectOutputStream targetOutputStream = targetUserConnection.getOutputStream();
+                                        targetOutputStream.writeObject(message);
+                                        System.out.println("Emoji sent successfully");
+                                        targetOutputStream.flush();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    System.out.println("Target user not found or not online.");
+                                }
+                            }
                         }
                         message = (Message) inputStream.readObject();
                     }

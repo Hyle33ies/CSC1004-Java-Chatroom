@@ -16,5 +16,6 @@ public interface MessageType {
     String MESSAGE_UPDATE_PORT = "7";
     String MESSAGE_UPDATE_OUTPUT_STREAM = "8";
     String MESSAGE_FILE_TRANSFER = "9";
+    String MESSAGE_EMOJI = "10";
 
 }

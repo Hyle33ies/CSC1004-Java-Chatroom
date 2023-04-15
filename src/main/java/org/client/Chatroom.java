@@ -37,7 +37,7 @@ public class Chatroom extends JFrame {
     private DefaultListModel<User> friendsListModel = new DefaultListModel<>();
     private JScrollPane messageScrollPane;
     private JTextPane messagePane;
-    private JTextPane messageField;
+    private JTextArea messageField;
     private JLabel chatWithLabel;
     private JPanel chatWithPanel;
     private Map<String, JTextPane> userChatPanes;
@@ -344,8 +344,7 @@ public class Chatroom extends JFrame {
 
         //Typing area
         JPanel typingPanel = new JPanel(new BorderLayout());
-        messageField = new JTextPane();
-        messageField.setContentType("text/html");
+        messageField = new JTextArea(3, 50);
         JScrollPane typingScrollPane = new JScrollPane(messageField);
         typingPanel.add(typingScrollPane, BorderLayout.CENTER);
 
@@ -424,12 +423,10 @@ public class Chatroom extends JFrame {
                         String content = resultSet.getString("content");
                         String sendTime = resultSet.getString("send_time");
 
-                        String color = sender.equals(current_user.getUsername()) ? "blue" : "green";
-                        String formattedMessage = "<font color=\"" + color + "\"><b>" + sender + " [" + sendTime + "]:</b></font> " + replaceEmojiWithHTML(content).replace("\n", "<br>") + "<br>";
+                        String color = sender.equals(current_user.getUsername()) ? "blue" : "red";
+                        String formattedMessage = "<font color=\"" + color + "\"><b>" + sender + " [" + sendTime + "]:</b></font> " + content.replace("\n", "<br>") + "<br>";
                         historyText.append(formattedMessage);
                     }
-
-
                     historyText.append("</body></html>");
                     historyPane.setText(historyText.toString());
                 } catch (SQLException ex) {
@@ -448,7 +445,7 @@ public class Chatroom extends JFrame {
         historyButton.setMaximumSize(buttonSize);
 
         JPanel leftButtonPanel = new JPanel();
-        leftButtonPanel.setLayout(new BoxLayout(leftButtonPanel, BoxLayout.Y_AXIS));
+        leftButtonPanel.setLayout(new GridLayout(3, 1));
         leftButtonPanel.add(sendFilesButton);
         leftButtonPanel.add(emojiButton);
         leftButtonPanel.add(historyButton);
@@ -544,16 +541,17 @@ public class Chatroom extends JFrame {
         }
 
         // Update the local chat pane
-        String formattedMessage = "<font color=\"blue\"><b>" + current_user.getUsername() + " [" + now.format(formatter) + "]:</b></font> " + replaceEmojiWithHTML(message).replace("\n", "<br>") + "<br>";
+        String formattedMessage = "<font color=\"blue\"><b>" + current_user.getUsername() + " [" + now.format(formatter) + "]:</b></font> " + message.replace("\n", "<br>") + "<br>";
         chatPane.setContentType("text/html");
         String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
         chatPane.setText(currentText + formattedMessage + "</body></html>");
 
         messageField.setText("");
-//        messageField.setLineWrap(true);
-//        messageField.setWrapStyleWord(true);
+        messageField.setLineWrap(true);
+        messageField.setWrapStyleWord(true);
     }
 
+@Deprecated
     private String replaceEmojiWithHTML(String content) {
         String regex = "emoji_\\d+\\.(?:png|jpg|jpeg|gif|bmp|tiff|tif)";
         Pattern pattern = Pattern.compile(regex);
@@ -706,11 +704,21 @@ public class Chatroom extends JFrame {
         friendsListModel.clear();
         for (UserConnection userConnection : onlineFriends) {
             User friend = userConnection.getUser();
-            if (!friend.getUsername().equals(currentUser)) {
+            if (!friend.getUsername().equals(currentUser) && !isUserInList(friend)) {
                 friendsListModel.addElement(friend);
             }
         }
     }
+
+    private boolean isUserInList(User user) {
+        for (int i = 0; i < friendsListModel.size(); i++) {
+            if (friendsListModel.getElementAt(i).getUsername().equals(user.getUsername())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private void showWarningMessage(String message) {
         StyledDocument document = messagePane.getStyledDocument();
@@ -742,9 +750,7 @@ public class Chatroom extends JFrame {
                             // Update the chat pane for the sender
                             SwingUtilities.invokeLater(() -> {
                                 JTextPane chatPane = getChatPaneForUser(sender);
-                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + sendTime +
-                                        "]:</b></font> " + replaceEmojiWithHTML(messageContent).
-                                        replace("\n", "<br>") + "<br>";
+                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + sendTime + "]:</b></font> " + messageContent.replace("\n", "<br>") + "<br>";
                                 chatPane.setContentType("text/html");
                                 String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
                                 chatPane.setText(currentText + formattedMessage + "</body></html>");
@@ -784,6 +790,31 @@ public class Chatroom extends JFrame {
                                         JOptionPane.showMessageDialog(mainFrame, "Failed to save the file. Please try again.", "File Transfer", JOptionPane.ERROR_MESSAGE);
                                     }
                                 }
+                            }
+                        }
+                        case MessageType.MESSAGE_EMOJI -> {
+                            System.out.println("Receive an Emoji from " + incomingMessage.getSender());
+                            String sender = incomingMessage.getSender();
+                            String emojiFilename = incomingMessage.getContent();
+                            SwingUtilities.invokeLater(() -> {
+                                JTextPane chatPane = getChatPaneForUser(sender);
+                                appendEmojiToChatPane(sender, chatPane, emojiFilename);
+                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "]:</b></font> " + emojiFilename + "<br>";
+                                chatPane.setContentType("text/html");
+                                String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
+                                chatPane.setText(currentText + formattedMessage + "</body></html>");
+                            });
+
+                            try {
+                                PreparedStatement statement = connection.prepareStatement("INSERT INTO message_history(sender, getter, content, send_time) VALUES (?, ?, ?, ?)");
+                                statement.setString(1, sender);
+                                statement.setString(2, current_user.getUsername());
+                                statement.setString(3, emojiFilename);
+                                statement.setString(4, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                                statement.executeUpdate();
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                                showWarningMessage("Failed to save the message. Please try again.");
                             }
                         }
                     }
@@ -904,12 +935,12 @@ public class Chatroom extends JFrame {
     private void addEmojis(JPanel emojiPanel) {
         File emojiFolder = new File("resources/emoji");
         File[] emojiFiles = emojiFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".png")
-            || name.toLowerCase().endsWith(".jpg")
-            || name.toLowerCase().endsWith(".jpeg")
-            || name.toLowerCase().endsWith(".gif")
-            || name.toLowerCase().endsWith(".bmp")
-            || name.toLowerCase().endsWith(".tiff")
-            || name.toLowerCase().endsWith(".tif"));
+                || name.toLowerCase().endsWith(".jpg")
+                || name.toLowerCase().endsWith(".jpeg")
+                || name.toLowerCase().endsWith(".gif")
+                || name.toLowerCase().endsWith(".bmp")
+                || name.toLowerCase().endsWith(".tiff")
+                || name.toLowerCase().endsWith(".tif"));
 
         if (emojiFiles != null) {
             for (File emojiFile : emojiFiles) {
@@ -918,8 +949,30 @@ public class Chatroom extends JFrame {
                     ImageIcon emojiIcon = new ImageIcon(emojiImage.getScaledInstance(64, 64, Image.SCALE_SMOOTH));
                     JButton emojiButton = new JButton(emojiIcon);
                     emojiButton.addActionListener(e -> {
-                        // Insert the emoji into the messageField as an image
-                        messageField.insertIcon(emojiIcon);
+                        User selectedUser = friendsList.getSelectedValue();
+
+                        String selectedUsername = selectedUser != null ? selectedUser.getUsername() : null;
+                        if (selectedUsername == null) {
+                            showWarningMessage("Please select a friend before sending an emoji.");
+                            return;
+                        }
+
+                        String emojiFilename = emojiFile.getName();
+
+                        Message message = new Message();
+                        message.setSender(current_user.getUsername());
+                        message.setGetter(selectedUsername);
+                        message.setContent(emojiFilename);
+                        message.setMesType(MessageType.MESSAGE_EMOJI);
+                        try {
+                            output.writeObject(message);
+                            output.flush();
+                        } catch (IOException ioException) {
+                            ioException.printStackTrace();
+                            showWarningMessage("Failed to send the emoji. Please try again.");
+                        }
+                        JTextPane chatPane = getChatPaneForUser(selectedUsername);
+                        appendEmojiToChatPane(current_user.getUsername(), chatPane, emojiFilename);
                     });
                     emojiPanel.add(emojiButton);
                 } catch (IOException e) {
@@ -928,5 +981,17 @@ public class Chatroom extends JFrame {
             }
         }
     }
+    private void appendEmojiToChatPane(String sender, JTextPane chatPane, String emojiFilename) {
+        try {
+            File emojiFile = new File("resources/emoji/" + emojiFilename);
+            BufferedImage emojiImage = ImageIO.read(emojiFile);
+            ImageIcon emojiIcon = new ImageIcon(emojiImage.getScaledInstance(32, 32, Image.SCALE_SMOOTH));
+            chatPane.insertIcon(emojiIcon);
+            chatPane.setCaretPosition(chatPane.getDocument().getLength());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
