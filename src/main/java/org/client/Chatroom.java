@@ -1,5 +1,6 @@
 package org.client;
 
+import org.Setting.Network_setting.Network_Setting;
 import org.client.tools.Message;
 import org.client.tools.MessageType;
 import org.client.tools.User;
@@ -18,7 +19,6 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.DriverManager;
@@ -51,9 +51,16 @@ public class Chatroom extends JFrame {
     private final java.sql.Connection connection;
 
 
-    public Chatroom(User current_user) throws ClassNotFoundException, SQLException {
+    public Chatroom(User current_user) throws ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
-        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
+        Network_Setting ns = new Network_Setting();
+        System.out.println("Network Setting: " + ns);
+        try {
+            connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
+        } catch (SQLException e) {
+            throw new RuntimeException("Error connecting to the database", e);
+        }
+
         this.current_user = current_user;
         System.out.println("Current user: " + current_user.getUsername());
     }
@@ -125,6 +132,8 @@ public class Chatroom extends JFrame {
                 newLogin.start();
             } catch (SQLException ex) {
                 ex.printStackTrace();
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
             }
         });
         // Exit menu item
@@ -145,7 +154,7 @@ public class Chatroom extends JFrame {
             Login login;
             try {
                 login = new Login();// new window
-            } catch (SQLException ex) {
+            } catch (SQLException | ClassNotFoundException ex) {
                 throw new RuntimeException(ex);
             }
             login.start();

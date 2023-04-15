@@ -1,5 +1,6 @@
 package org.server;
 
+import org.Setting.Network_setting.Network_Setting;
 import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.client.tools.Message;
@@ -32,7 +33,10 @@ public class Server {
         connectedUsers = Collections.synchronizedList(new ArrayList<>());
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
+            Network_Setting ns = new Network_Setting();
+            System.out.println("Network Setting: " + ns);
+            connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
+
             threadPool = Executors.newCachedThreadPool();
             // Preparations for socket programming and multi-thread programming.
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {

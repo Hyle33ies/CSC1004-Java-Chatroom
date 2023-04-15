@@ -1,5 +1,6 @@
 package org.client;
 
+import org.Setting.Network_setting.Network_Setting;
 import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.client.tools.Message;
@@ -18,12 +19,15 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Login {
-    private JFrame frame;
+    protected JFrame frame;
     private JDialog dialog;
     private final Connection connection;
 
-    public Login() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
+    public Login() throws SQLException, ClassNotFoundException {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        Network_Setting ns = new Network_Setting();
+        System.out.println("Network Setting: " + ns);
+        connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
     }
 
     public void start() {
@@ -174,11 +178,87 @@ public class Login {
 
         loginButton.addActionListener(e -> handleLogin(usernameField, passwordField, rememberMeCheckBox, verificationCodeField, initialVerificationCode[0]));
 
-        // Menu bar
+        // Menu Bar
         JMenuBar menuBar = new JMenuBar();
         JMenu helpMenu = new JMenu("Help");
+
+        //Database Setting Menu Item
+        JMenuItem databaseSettingMenuItem = new JMenuItem("Database Setting");
+
+        databaseSettingMenuItem.addActionListener(e -> {
+            JDialog databaseSettingDialog = new JDialog();
+            databaseSettingDialog.setAlwaysOnTop(true);
+            databaseSettingDialog.setTitle("Database Setting");
+            databaseSettingDialog.setModal(false);
+            databaseSettingDialog.setLayout(new BorderLayout());
+
+            JTextArea noticeArea = new JTextArea(
+                    "1. Please enter your database settings in JDBC form. For example, I use mySQL as my database and the port number is initially 3306, the information should be stored in chatroom_users database, then the setting should be \"jdbc:mysql://localhost:3306/chatroom_users\".\n" +
+                    "2. Enter your user and password correctly!"
+            );
+            noticeArea.setEditable(false);
+            noticeArea.setLineWrap(true);
+            noticeArea.setWrapStyleWord(true);
+
+            JScrollPane noticeScrollPane = new JScrollPane(noticeArea);
+            noticeScrollPane.setPreferredSize(new Dimension(400, 100));
+            databaseSettingDialog.add(noticeScrollPane, BorderLayout.NORTH);
+
+            JPanel contentPanel = new JPanel();
+            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+
+            JPanel settingPanel = new JPanel(new BorderLayout());
+            JLabel settingLabel = new JLabel("Setting (JDBC URL):");
+            JTextField settingField = new JTextField();
+            settingPanel.add(settingLabel, BorderLayout.NORTH);
+            settingPanel.add(settingField, BorderLayout.CENTER);
+            contentPanel.add(settingPanel);
+
+            JPanel usernamePanel = new JPanel(new BorderLayout());
+            JLabel usernameLabel1 = new JLabel("Username:");
+            JTextField usernameField1 = new JTextField();
+            usernamePanel.add(usernameLabel1, BorderLayout.NORTH);
+            usernamePanel.add(usernameField1, BorderLayout.CENTER);
+            contentPanel.add(usernamePanel);
+
+            JPanel passwordPanel = new JPanel(new BorderLayout());
+            JLabel passwordLabel1 = new JLabel("Password:");
+            JPasswordField passwordField1 = new JPasswordField();
+            passwordPanel.add(passwordLabel1, BorderLayout.NORTH);
+            passwordPanel.add(passwordField1, BorderLayout.CENTER);
+            contentPanel.add(passwordPanel);
+
+            JButton confirmButton = new JButton("Confirm");
+            contentPanel.add(confirmButton);
+
+            confirmButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String setting = settingField.getText();
+                    String username = usernameField1.getText();
+                    String password = new String(passwordField1.getPassword());
+
+                    Network_Setting ns = new Network_Setting(setting,username,password);
+                    // Store the collected information into variables as needed
+                    // For example:
+                    // dbSetting = setting;
+                    // dbUsername = username;
+                    // dbPassword = password;
+
+                    databaseSettingDialog.dispose();
+                }
+            });
+
+            databaseSettingDialog.add(contentPanel, BorderLayout.CENTER);
+            databaseSettingDialog.pack();
+            databaseSettingDialog.setLocationRelativeTo(null);
+            databaseSettingDialog.setVisible(true);
+        });
+
+        //Exit Item
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> ExitConfirmDialog.showExitConfirmDialog(frame));
+        //Readme Item
         JMenuItem readmeMenuItem = new JMenuItem("ReadMe");
         readmeMenuItem.addActionListener(e -> {
             try {
@@ -191,6 +271,7 @@ public class Login {
 
         helpMenu.add(exitMenuItem);
         helpMenu.add(readmeMenuItem);
+        helpMenu.add(databaseSettingMenuItem);
 
         JMenu functionMenu = new JMenu("Function");
         JMenuItem registerMenuItem = new JMenuItem("Register a new user for free");
@@ -256,7 +337,7 @@ public class Login {
             } else {
                 showErrorDialog("Wrong username or password!");
             }
-        } catch (IOException | ClassNotFoundException | SQLException ex) {
+        } catch (IOException | ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }
     }

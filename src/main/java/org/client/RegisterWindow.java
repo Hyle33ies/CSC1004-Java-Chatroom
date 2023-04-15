@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
 
+import org.Setting.Network_setting.Network_Setting;
 import org.client.tools.User;
 
 /**
@@ -344,7 +345,9 @@ public class RegisterWindow {
                     Connection connection;
                     try {
                         Class.forName("com.mysql.cj.jdbc.Driver");
-                        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/chatroom_users", "root", "@Frankett2004");
+                        Network_Setting ns = new Network_Setting();
+                        System.out.println("Network Setting: " + ns);
+                        connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
                         String sql = "select * from users where username = ? or email = ?";
                         PreparedStatement statement = connection.prepareStatement(sql);
                         statement.setObject(1, s1);
