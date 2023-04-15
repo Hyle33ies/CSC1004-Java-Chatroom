@@ -7,6 +7,7 @@ import org.server.UserConnection;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -17,7 +18,9 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -173,6 +176,38 @@ public class Chatroom extends JFrame {
         });
         actionsMenu.add(updateProfileMenuItem);
 
+        // add emoji menu item
+        JMenuItem addEmojiMenuItem = new JMenuItem("Add a new emoji");
+        addEmojiMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JDialog fileChooserDialog = new JDialog();
+                fileChooserDialog.setAlwaysOnTop(true);
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setAcceptAllFileFilterUsed(false);
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "png", "jpg", "jpeg", "gif", "bmp", "tiff", "tif");
+                fileChooser.setFileFilter(filter);
+
+                fileChooser.addActionListener(e1 -> {
+                    if (e1.getActionCommand().equals(JFileChooser.APPROVE_SELECTION)) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        try {
+                            Files.copy(selectedFile.toPath(), new File("resources/emoji/" + selectedFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            JOptionPane.showMessageDialog(null, "New emoji added successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(null, "Failed to add the new emoji. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                    fileChooserDialog.dispose();
+                });
+
+                fileChooserDialog.add(fileChooser);
+                fileChooserDialog.pack();
+                fileChooserDialog.setVisible(true);
+            }
+        });
+        actionsMenu.add(addEmojiMenuItem);
         // Friends list panel
         JPanel friendsListPanel = new JPanel(new BorderLayout());
         mainPanel.add(friendsListPanel, BorderLayout.WEST);
@@ -406,7 +441,7 @@ public class Chatroom extends JFrame {
             // Fetch the message history for the current users
             User selectedUser = friendsList.getSelectedValue();
             if (selectedUser != null) {
-                try{
+                try {
                     PreparedStatement statement = connection.prepareStatement("SELECT sender, getter, content, send_time FROM message_history WHERE (sender = ? AND getter = ?) OR (sender = ? AND getter = ?) ORDER BY send_time ASC");
                     statement.setString(1, current_user.getUsername());
                     statement.setString(2, selectedUser.getUsername());
@@ -541,17 +576,31 @@ public class Chatroom extends JFrame {
         }
 
         // Update the local chat pane
-        String formattedMessage = "<font color=\"blue\"><b>" + current_user.getUsername() + " [" + now.format(formatter) + "]:</b></font> " + message.replace("\n", "<br>") + "<br>";
-        chatPane.setContentType("text/html");
-        String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
-        chatPane.setText(currentText + formattedMessage + "</body></html>");
+        appendMessageToChatPane(current_user.getUsername(), chatPane, message, sendTime, true);
 
         messageField.setText("");
         messageField.setLineWrap(true);
         messageField.setWrapStyleWord(true);
     }
 
-@Deprecated
+    private void appendMessageToChatPane(String sender, JTextPane chatPane, String message, String sendTime, boolean isSender) {
+        StyledDocument doc = chatPane.getStyledDocument();
+
+        Style defaultStyle = doc.getStyle(StyleContext.DEFAULT_STYLE);
+        Style senderStyle = doc.addStyle("SenderStyle", defaultStyle);
+        StyleConstants.setForeground(senderStyle, isSender ? Color.BLUE : Color.RED);
+        StyleConstants.setBold(senderStyle, true);
+
+        try {
+            doc.insertString(doc.getLength(), sender + " [" + sendTime + "]: ", senderStyle);
+            doc.insertString(doc.getLength(), message + "\n", null);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Deprecated
     private String replaceEmojiWithHTML(String content) {
         String regex = "emoji_\\d+\\.(?:png|jpg|jpeg|gif|bmp|tiff|tif)";
         Pattern pattern = Pattern.compile(regex);
@@ -799,10 +848,6 @@ public class Chatroom extends JFrame {
                             SwingUtilities.invokeLater(() -> {
                                 JTextPane chatPane = getChatPaneForUser(sender);
                                 appendEmojiToChatPane(sender, chatPane, emojiFilename);
-                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "]:</b></font> " + emojiFilename + "<br>";
-                                chatPane.setContentType("text/html");
-                                String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
-                                chatPane.setText(currentText + formattedMessage + "</body></html>");
                             });
 
                             try {
@@ -981,17 +1026,28 @@ public class Chatroom extends JFrame {
             }
         }
     }
+
     private void appendEmojiToChatPane(String sender, JTextPane chatPane, String emojiFilename) {
         try {
             File emojiFile = new File("resources/emoji/" + emojiFilename);
             BufferedImage emojiImage = ImageIO.read(emojiFile);
             ImageIcon emojiIcon = new ImageIcon(emojiImage.getScaledInstance(32, 32, Image.SCALE_SMOOTH));
-            chatPane.insertIcon(emojiIcon);
-            chatPane.setCaretPosition(chatPane.getDocument().getLength());
-        } catch (IOException e) {
+
+            StyledDocument doc = chatPane.getStyledDocument();
+            Style style = doc.addStyle("emojiStyle", null);
+            StyleConstants.setIcon(style, emojiIcon);
+
+            String messageText = sender + ": ";
+            doc.insertString(doc.getLength(), messageText, null);
+            doc.insertString(doc.getLength(), " ", style);
+            doc.insertString(doc.getLength(), "\n", null);
+
+            // Add this line to prevent the disappearing emoji issue
+            chatPane.setCaretPosition(doc.getLength());
+
+        } catch (IOException | BadLocationException e) {
             e.printStackTrace();
         }
     }
-
 
 }
