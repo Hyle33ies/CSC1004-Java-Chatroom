@@ -1,6 +1,6 @@
 package org.server;
 
-import org.Setting.Network_setting.Network_Setting;
+import org.setting.Network_setting.Network_Setting;
 import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.client.tools.Message;

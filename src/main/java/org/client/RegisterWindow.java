@@ -6,7 +6,7 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
 
-import org.Setting.Network_setting.Network_Setting;
+import org.setting.Network_setting.Network_Setting;
 
 /**
  * User: HP

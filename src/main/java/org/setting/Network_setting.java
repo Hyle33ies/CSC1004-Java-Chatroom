@@ -1,4 +1,4 @@
-package org.Setting;
+package org.setting;
 
 /**
  * User: HP
