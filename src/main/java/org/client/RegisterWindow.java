@@ -88,7 +88,7 @@ public class RegisterWindow {
                 2. Username/password should only contain numbers, letters and '@#$%^&_'.
                 3. The items with '*' are not required.
                 4. If you prefer not to say your age, fill out -1.
-                5. Question and answer are used to recover your password. But the function is not available now. Stay tuned.
+                5. Question and answer are used to recover your password. If you are forgetful, please fill out the answer carefully and do remember your email, too!
                 """);
         Font font = new Font("Times New Roman", Font.PLAIN, 13);
         notice.setFont(font);

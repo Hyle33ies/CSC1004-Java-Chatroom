@@ -479,7 +479,7 @@ public class Login {
         JMenuItem forgetPasswordMenuItem = new JMenuItem("I forgot my password!");
 
         functionMenu.add(registerMenuItem);
-        functionMenu.add(forgetPasswordMenuItem);
+//        functionMenu.add(forgetPasswordMenuItem);
 
         menuBar.add(helpMenu);
         menuBar.add(functionMenu);
