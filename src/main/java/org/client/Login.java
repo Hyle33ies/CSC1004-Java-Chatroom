@@ -44,7 +44,7 @@ public class Login {
         frame.setSize(500, 300);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
-        frame.setAlwaysOnTop(true);
+//        frame.setAlwaysOnTop(true);
 
         initComponents();
 
@@ -131,6 +131,138 @@ public class Login {
         JButton forgetPasswordButton = new JButton("Password Recovery");
         c.gridx = 2;
         c.gridy = 4;
+        forgetPasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame verifyFrame = new JFrame("Verification");
+                verifyFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                verifyFrame.setSize(400, 150);
+                verifyFrame.setLayout(new GridLayout(3, 2));
+
+                // Add components to the verifyFrame
+                JLabel usernameLabel = new JLabel("Username:");
+                JTextField usernameField = new JTextField();
+                JLabel emailLabel = new JLabel("Email:");
+                JTextField emailField = new JTextField();
+                JButton submitButton = new JButton("Submit");
+                JButton cancelButton = new JButton("Cancel");
+                cancelButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        verifyFrame.dispose();
+                    }
+                });
+
+                verifyFrame.add(usernameLabel);
+                verifyFrame.add(usernameField);
+                verifyFrame.add(emailLabel);
+                verifyFrame.add(emailField);
+                verifyFrame.add(submitButton);
+                verifyFrame.add(cancelButton);
+
+                verifyFrame.setVisible(true);
+
+                submitButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String username = usernameField.getText();
+                        String email = emailField.getText();
+
+                        try {
+                            String sql = "SELECT * FROM QandA WHERE username = ? AND email = ?";
+                            PreparedStatement statement = connection.prepareStatement(sql);
+                            statement.setString(1, username);
+                            statement.setString(2, email);
+                            ResultSet result = statement.executeQuery();
+
+                            if (!result.next()) {
+                                JOptionPane.showMessageDialog(null,
+                                        "No such combination of username and email found / you do not set security problems.", "Error", JOptionPane.ERROR_MESSAGE);
+                                usernameField.setText("");
+                                emailField.setText("");
+                            } else {
+                                verifyFrame.dispose();
+                                String question1 = result.getString("question1");
+                                String answer1 = result.getString("answer1");
+                                String question2 = result.getString("question2");
+                                String answer2 = result.getString("answer2");
+
+                                if (question1 == null && question2 == null) {
+                                    JOptionPane.showMessageDialog(null, "No security questions were set for this account.", "Information", JOptionPane.INFORMATION_MESSAGE);
+                                } else {
+                                    // Create a new JFrame to display the questions and get the user's answers
+                                    JFrame questionFrame = new JFrame("Security Questions");
+                                    questionFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                                    questionFrame.setSize(400, 150);
+                                    questionFrame.setLayout(new GridLayout(3, 2));
+
+                                    JLabel question1Label = new JLabel(question1 != null ? question1 : "You don't set question 1");
+                                    JTextField answer1Field = new JTextField();
+                                    JLabel question2Label = new JLabel(question2 != null ? question2 : "You don't set question 2");
+                                    JTextField answer2Field = new JTextField();
+                                    JButton verifyButton = new JButton("Verify");
+                                    JButton cancelQuestionButton = new JButton("Cancel");
+
+                                    questionFrame.add(question1Label);
+                                    questionFrame.add(answer1Field);
+                                    questionFrame.add(question2Label);
+                                    questionFrame.add(answer2Field);
+                                    questionFrame.add(verifyButton);
+                                    questionFrame.add(cancelQuestionButton);
+
+                                    questionFrame.setVisible(true);
+
+                                    verifyButton.addActionListener(new ActionListener() {
+                                        @Override
+                                        public void actionPerformed(ActionEvent e) {
+                                            String userAnswer1 = answer1Field.getText();
+                                            String userAnswer2 = answer2Field.getText();
+
+                                            boolean answer1Correct = question1 == null || userAnswer1.equals(answer1);
+                                            boolean answer2Correct = question2 == null || userAnswer2.equals(answer2);
+
+                                            if (answer1Correct && answer2Correct) {
+                                                questionFrame.dispose();
+                                                JFrame successFrame = new JFrame("Success");
+                                                successFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                                                successFrame.setSize(300, 200);
+                                                successFrame.setLayout(new BorderLayout());
+
+                                                JLabel successLabel = new JLabel("Your answers are correct!", SwingConstants.CENTER);
+                                                JButton closeSuccessButton = new JButton("Close");
+
+                                                successFrame.add(successLabel, BorderLayout.CENTER);
+                                                successFrame.add(closeSuccessButton, BorderLayout.SOUTH);
+
+                                                successFrame.setVisible(true);
+
+                                                closeSuccessButton.addActionListener(new ActionListener() {
+                                                    @Override
+                                                    public void actionPerformed(ActionEvent e) {
+                                                        successFrame.dispose();
+                                                    }
+                                                });
+                                            } else {
+                                                JOptionPane.showMessageDialog(null, "Your answers are incorrect. Please think through.", "Error", JOptionPane.ERROR_MESSAGE);
+                                            }
+                                        }
+                                    });
+
+                                    cancelQuestionButton.addActionListener(new ActionListener() {
+                                        @Override
+                                        public void actionPerformed(ActionEvent e) {
+                                            questionFrame.dispose();
+                                        }
+                                    });
+                                }
+                            }
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+            }
+        });
         loginPanel.add(forgetPasswordButton, c);
 
         registerButton.addActionListener(e -> {
@@ -139,11 +271,6 @@ public class Login {
             } catch (ClassNotFoundException ex) {
                 throw new RuntimeException(ex);
             }
-        });
-
-        forgetPasswordButton.addActionListener(e -> {
-            //                openForgetPasswordWindow(); TODO
-            showErrorDialog("This feature is not available yet. Stay tuned!");
         });
 
         // Add Verification Code label, text field, and displayed verification code
@@ -194,7 +321,7 @@ public class Login {
 
             JTextArea noticeArea = new JTextArea(
                     "1. Please enter your database settings in JDBC form. For example, I use mySQL as my database and the port number is initially 3306, the information should be stored in chatroom_users database, then the setting should be \"jdbc:mysql://localhost:3306/chatroom_users\".\n" +
-                    "2. Enter your user and password correctly!"
+                            "2. Enter your user and password correctly!"
             );
             noticeArea.setEditable(false);
             noticeArea.setLineWrap(true);
@@ -236,7 +363,7 @@ public class Login {
                 String username = usernameField1.getText();
                 String password = new String(passwordField1.getPassword());
 
-                Network_Setting ns = new Network_Setting(setting,username,password);
+                Network_Setting ns = new Network_Setting(setting, username, password);
                 databaseSettingDialog.dispose();
             });
 
@@ -342,6 +469,7 @@ public class Login {
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(frame, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
+
     private void saveRememberedUser(String username, String password) throws SQLException {
         String sql = "INSERT INTO user_remember (username, password) VALUES (?, ?)";
         PreparedStatement statement = connection.prepareStatement(sql);
@@ -357,7 +485,7 @@ public class Login {
         statement.executeUpdate();
     }
 
-    private boolean loadRememberedUser(JTextField field1,JTextField field2) throws SQLException {
+    private boolean loadRememberedUser(JTextField field1, JTextField field2) throws SQLException {
         String sql = "SELECT * FROM user_remember";
         PreparedStatement statement = connection.prepareStatement(sql);
         ResultSet result = statement.executeQuery();
@@ -370,6 +498,7 @@ public class Login {
         System.out.println("No remembered user");
         return false;
     }
+
     @Deprecated
     static class ErrorDialog extends JDialog {
         // Just a simple Dialog
@@ -390,10 +519,11 @@ public class Login {
             setVisible(true);
         }
     }
+
     /*
-        * This class is used to show a confirmation dialog when user tries to exit the application.
-        * If user clicks "Yes", the application will exit.
-        * If user clicks "No", the dialog will be closed.
+     * This class is used to show a confirmation dialog when user tries to exit the application.
+     * If user clicks "Yes", the application will exit.
+     * If user clicks "No", the dialog will be closed.
      */
     public static class ExitConfirmDialog {
         public static void main(String[] args) {
@@ -547,7 +677,7 @@ public class Login {
             }
 
             public void paint(Graphics g) {
-                g.setColor(new Color(0,255,255,90));
+                g.setColor(new Color(0, 255, 255, 90));
                 g.fillOval(x, y, size, size);
             }
         }

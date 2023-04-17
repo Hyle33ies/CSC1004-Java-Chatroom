@@ -28,7 +28,7 @@ public class RegisterWindow {
         Jframe.setResizable(false);
 //        JFrame.setLayout(new BorderLayout());
         Jframe.setLayout(null);
-        Jframe.setAlwaysOnTop(true);
+//        Jframe.setAlwaysOnTop(true);
         Jframe.setCursor(new Cursor(Cursor.HAND_CURSOR));
         Jframe.setTitle("Register for new");
         Jframe.setVisible(true);
@@ -260,6 +260,7 @@ public class RegisterWindow {
                 String s2 = passwordFill.getText();
                 String ageString = ageFill.getText();
                 if(ageString.equals("")){
+                    //age invalid
                     System.out.println("Please enter your age!");
                     ErrorDialog ed = new ErrorDialog(Jframe, "Please enter your age!");
                     ed.setVisible(true);
@@ -273,7 +274,7 @@ public class RegisterWindow {
                 String city = cityFill.getText();
                 String intro = introFill.getText();
                 if (!s1.matches("^[a-zA-Z0-9_@#$%^&]{6,20}") || !s2.matches("^[a-zA-Z0-9_@#$%^&]{6,20}")) {
-                    //dialog
+                    //dialog: username/password invalid
                     JDialog d1 = new JDialog(Jframe, "username/password invalid!", false);
                     //content
                     JButton b1 = new JButton("Fine");
@@ -294,7 +295,32 @@ public class RegisterWindow {
                             d1.dispose();
                         }
                     });
-                } else if (age < -1 || age > 121) {
+                } else if (!passwordFill.getText().equals( confirmPasswordFill.getText())){
+                    //dialog: password not match
+                    JDialog d1 = new JDialog(Jframe, "password not match!", false);
+                    System.out.println("First time" + passwordFill.getText());
+                    System.out.println("Second time: " + confirmPasswordFill.getText());
+                    //content
+                    JButton b1 = new JButton("OK");
+                    b1.setBounds(0, 0, 251, 100);
+                    b1.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                    d1.add(b1);
+                    //action
+                    d1.setBounds(300, 350, 251, 100);
+                    d1.setVisible(true);
+                    d1.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            d1.dispose();
+                        }
+                    });
+                }
+                else if (age < -1 || age > 121) {
                     //dialog
                     JDialog d1 = new JDialog(Jframe, "age invalid!", false);
                     //content
@@ -353,11 +379,15 @@ public class RegisterWindow {
                         statement.setObject(2, email);
                         ResultSet result = statement.executeQuery();
                         if (result.next()) {
-                            //fail
+                            //fail, the user already exists
                             ErrorDialog ed = new ErrorDialog(Jframe, "This username or email has been used!");
                             ed.setVisible(true);
                         } else {
-                            // Valid!
+                            // Valid!!!
+                            boolean success = storeQandAInDatabase(connection, userNameFill.getText(), mailFill.getText(),
+                                    question1Fill.getText(), answer1Fill.getText(), question2Fill.getText(),
+                                    answer2Fill.getText());
+                            if (!success) return;
                             sql = "insert into users (username, password, age, sex, email, country, city, introduction) " +
                                     "values(?,?,?,?,?,?,?,?)";
                             PreparedStatement statement1 = connection.prepareStatement(sql);
@@ -510,5 +540,34 @@ public class RegisterWindow {
                 g.fillOval(x, y, size, size);
             }
         }
+
+
+    }
+
+    private boolean storeQandAInDatabase(Connection connection, String userNameFill, String mailFill, String question1Fill, String answer1Fill, String question2Fill, String answer2Fill) {
+        if (question1Fill.isEmpty() && question2Fill.isEmpty()) {
+            return true;
+        }
+
+        if ((!question1Fill.isEmpty() && answer1Fill.isEmpty()) || (!question2Fill.isEmpty() && answer2Fill.isEmpty())) {
+            JOptionPane.showMessageDialog(null, "Please fill in the answers for the questions you provided.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return false; // Register failed
+        }
+
+        try {
+            String sql = "INSERT INTO QandA (username, email, question1, answer1, question2, answer2) VALUES (?, ?, ?, ?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, userNameFill);
+            statement.setString(2, mailFill);
+            statement.setString(3, question1Fill.isEmpty() ? null : question1Fill);
+            statement.setString(4, answer1Fill.isEmpty() ? null : answer1Fill);
+            statement.setString(5, question2Fill.isEmpty() ? null : question2Fill);
+            statement.setString(6, answer2Fill.isEmpty() ? null : answer2Fill);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Failed to store questions and answers in the database. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return true;
     }
 }
