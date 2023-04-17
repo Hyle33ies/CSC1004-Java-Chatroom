@@ -1,5 +1,6 @@
 package org.client;
 
+import org.setting.Network_setting;
 import org.setting.Network_setting.Network_Setting;
 import org.client.tools.MessageType;
 import org.client.tools.User;
@@ -225,18 +226,87 @@ public class Login {
                                                 questionFrame.dispose();
                                                 JFrame successFrame = new JFrame("Success");
                                                 successFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                                                successFrame.setSize(300, 200);
-                                                successFrame.setLayout(new BorderLayout());
+                                                successFrame.setSize(400, 350);
+                                                successFrame.setLayout(new GridLayout(7, 2));
 
                                                 JLabel successLabel = new JLabel("Your answers are correct!", SwingConstants.CENTER);
-                                                JButton closeSuccessButton = new JButton("Close");
+                                                JLabel usernameLabel = new JLabel("Username: " + username);
+                                                JLabel emailLabel = new JLabel("Email: " + email);
+                                                JLabel oldPasswordLabel = new JLabel("Old Password:");
+                                                JPasswordField oldPasswordField = new JPasswordField();
+                                                JLabel newPasswordLabel = new JLabel("New Password:");
+                                                JPasswordField newPasswordField = new JPasswordField();
+                                                JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+                                                JPasswordField confirmPasswordField = new JPasswordField();
+                                                JButton confirmButton = new JButton("Confirm");
+                                                JButton cancelButton = new JButton("Cancel");
 
-                                                successFrame.add(successLabel, BorderLayout.CENTER);
-                                                successFrame.add(closeSuccessButton, BorderLayout.SOUTH);
+                                                successFrame.add(successLabel);
+                                                successFrame.add(new JLabel());
+                                                successFrame.add(usernameLabel);
+                                                successFrame.add(emailLabel);
+                                                successFrame.add(oldPasswordLabel);
+                                                successFrame.add(oldPasswordField);
+                                                successFrame.add(newPasswordLabel);
+                                                successFrame.add(newPasswordField);
+                                                successFrame.add(confirmPasswordLabel);
+                                                successFrame.add(confirmPasswordField);
+                                                successFrame.add(confirmButton);
+                                                successFrame.add(cancelButton);
 
                                                 successFrame.setVisible(true);
 
-                                                closeSuccessButton.addActionListener(new ActionListener() {
+                                                confirmButton.addActionListener(new ActionListener() {
+                                                    @Override
+                                                    public void actionPerformed(ActionEvent e) {
+                                                        String oldPassword = new String(oldPasswordField.getPassword());
+                                                        String newPassword = new String(newPasswordField.getPassword());
+                                                        String confirmPassword = new String(confirmPasswordField.getPassword());
+
+                                                        try {
+                                                            // Check if the old password is correct
+                                                            String checkOldPasswordSql = "SELECT password FROM users WHERE username = ?";
+                                                            PreparedStatement checkOldPasswordStatement = connection.prepareStatement(checkOldPasswordSql);
+                                                            checkOldPasswordStatement.setString(1, username);
+                                                            ResultSet resultSet = checkOldPasswordStatement.executeQuery();
+
+                                                            if (resultSet.next()) {
+                                                                String storedPassword = resultSet.getString("password");
+
+                                                                if (!oldPassword.equals(storedPassword)) {
+                                                                    JOptionPane.showMessageDialog(null, "Old password is incorrect. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                                                                    return;
+                                                                }
+                                                            }
+
+                                                            if (!newPassword.equals(confirmPassword)) {
+                                                                JOptionPane.showMessageDialog(null, "Passwords do not match. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                                                                return;
+                                                            }
+
+                                                            if (newPassword.length() < 6 || newPassword.length() > 20) {
+                                                                JOptionPane.showMessageDialog(null, "Password must be between 6 and 20 characters.", "Error", JOptionPane.ERROR_MESSAGE);
+                                                                return;
+                                                            }
+
+                                                            // Update the password in the database
+                                                            String updateSql = "UPDATE users SET password = ? WHERE username = ?";
+                                                            PreparedStatement updateStatement = connection.prepareStatement(updateSql);
+                                                            updateStatement.setString(1, newPassword);
+                                                            updateStatement.setString(2, username);
+                                                            updateStatement.executeUpdate();
+
+                                                            JOptionPane.showMessageDialog(null, "Password updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                                                            successFrame.dispose();
+
+                                                        } catch (SQLException ex) {
+                                                            ex.printStackTrace();
+                                                            JOptionPane.showMessageDialog(null, "Failed to update the password. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                                                        }
+                                                    }
+                                                });
+
+                                                cancelButton.addActionListener(new ActionListener() {
                                                     @Override
                                                     public void actionPerformed(ActionEvent e) {
                                                         successFrame.dispose();
@@ -364,6 +434,11 @@ public class Login {
                 String password = new String(passwordField1.getPassword());
 
                 Network_Setting ns = new Network_Setting(setting, username, password);
+//                try {
+//                    Network_setting.DatabaseInitializer.init();
+//                } catch (SQLException ex) {
+//                    throw new RuntimeException(ex);
+//                }
                 databaseSettingDialog.dispose();
             });
 
