@@ -10,6 +10,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.*;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -593,20 +595,21 @@ public class Chatroom extends JFrame {
     }
 
     private void appendMessageToChatPane(String sender, JTextPane chatPane, String message, String sendTime, boolean isSender) {
-        StyledDocument doc = chatPane.getStyledDocument();
+        chatPane.setContentType("text/html");
+        HTMLEditorKit editorKit = (HTMLEditorKit) chatPane.getEditorKit();
+        HTMLDocument doc = (HTMLDocument) chatPane.getDocument();
+        String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
 
-        Style defaultStyle = doc.getStyle(StyleContext.DEFAULT_STYLE);
-        Style senderStyle = doc.addStyle("SenderStyle", defaultStyle);
-        StyleConstants.setForeground(senderStyle, isSender ? Color.BLUE : Color.RED);
-        StyleConstants.setBold(senderStyle, true);
+        String senderColor = isSender ? "blue" : "red";
+        String formattedMessage = "<font color=\"" + senderColor + "\"><b>" + sender + " [" + sendTime + "]:</b></font> " + message.replace("\n", "<br>") + "<br>";
 
         try {
-            doc.insertString(doc.getLength(), sender + " [" + sendTime + "]: ", senderStyle);
-            doc.insertString(doc.getLength(), message + "\n", null);
-        } catch (BadLocationException e) {
+            editorKit.insertHTML(doc, doc.getLength(), formattedMessage, 0, 0, null);
+        } catch (BadLocationException | IOException e) {
             e.printStackTrace();
         }
     }
+
 
 
     @Deprecated
@@ -808,10 +811,7 @@ public class Chatroom extends JFrame {
                             // Update the chat pane for the sender
                             SwingUtilities.invokeLater(() -> {
                                 JTextPane chatPane = getChatPaneForUser(sender);
-                                String formattedMessage = "<font color=\"red\"><b>" + sender + " [" + sendTime + "]:</b></font> " + messageContent.replace("\n", "<br>") + "<br>";
-                                chatPane.setContentType("text/html");
-                                String currentText = chatPane.getText().replaceAll("</body>", "").replaceAll("</html>", "");
-                                chatPane.setText(currentText + formattedMessage + "</body></html>");
+                                appendMessageToChatPane(sender, chatPane, messageContent, sendTime, false);
                             });
                         }
                         case MessageType.MESSAGE_FILE_TRANSFER -> {
