@@ -59,17 +59,17 @@ Let's see how the project is implemented.
 
 If you're trying to run the project on your own computer, you should set up your database first!
 
-![image-20230417221005236](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417221005236.png)
+![image-20230417221005236](assets/image-20230417221005236.png)
 
 First, click on Database Setting. You should copy the setting for now because the application doesn't support other databases.
 
-![image-20230417221127361](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417221127361.png)
+![image-20230417221127361](assets/image-20230417221127361.png)
 
 The URL should be modified only when the port number is not by default 3306. Then input your mySQL username and password.
 
 Make sure you **don't** have a database called "chatroom_users" now!
 
-![image-20230417221506771](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417221506771.png)
+![image-20230417221506771](assets/image-20230417221506771.png)
 
 Look at the Project Structure, the main code are divided into three parts. You should know click on setting/Init_Database, and run the main method directly. The database and tables needed are prepared automatically.
 
@@ -77,13 +77,13 @@ The other two runnable programs are "client/Client" and "server/Server". Please 
 
 The server doesn't have a GUI and logs will be outputed in the system console. You don't need to understand them in order to use this application.
 
-The client side should look like this.![](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417223031903.png)
+The client side should look like this.![](assets/image-20230417223031903.png)
 
 There's a stupid animation here I used to fill the assessment scheme in the past. You can turn it off with the "Enable Animation".
 
 The GUI is self-explanatory.
 
-![image-20230417223047506](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417223047506.png)
+![image-20230417223047506](assets/image-20230417223047506.png)
 
 The Register Window also has the stupid animation, which I'm too lazy to set a checkbox to close.
 
@@ -91,7 +91,7 @@ Please follow the instructions to fill out the form in order to sign up. After r
 
 Note that if you want to recovery your password one day, you should remember your username, e-mail carefully! Additionally, you should fill in **at least one** question to secure your account. The '\*' items are not required, though. Here's a sample of Successful Signing Up. If you click and nothing happens, you may have too many windows on your desktop, you can search for the sign-up information dialog.
 
-![image-20230417223708502](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417223708502.png)
+![image-20230417223708502](assets/image-20230417223708502.png)
 
 Then you should enter your username and password, you can also tick the "Remember The Password" to avoid entering them next time.
 
@@ -99,7 +99,7 @@ If you stumble over the Verification code for "I1l" issue, you can click right o
 
 Now you should enter this GUI!
 
-![image-20230417224001162](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417224001162.png)
+![image-20230417224001162](assets/image-20230417224001162.png)
 
 
 
@@ -113,15 +113,15 @@ The login window may be hidden behind your Chatroom window.
 
 Now you should have two users online!
 
-![image-20230417224603721](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417224603721.png)
+![image-20230417224603721](assets/image-20230417224603721.png)
 
 Click on both sides' "Get online Friends", and you should have each other on the list. You should click to update the list whenever you are about to say something to your friend, because they may already be offline!
 
-![image-20230417224800786](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417224800786.png)
+![image-20230417224800786](assets/image-20230417224800786.png)
 
 Click on the friend you want to chat with, and then you should see both your name and your friend's name on the top corners.
 
-![image-20230417231147114](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417231147114.png)
+![image-20230417231147114](assets/image-20230417231147114.png)
 
 Now you should send what you want with your friends! If you type some text messages, use Ctrl/Command + Enter should also work!
 
@@ -143,7 +143,7 @@ Note that emoji and files will not be recorded. The former is not important (I t
 
 ###### Actions Menu
 
-![image-20230417232156781](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230417232156781.png)
+![image-20230417232156781](assets/image-20230417232156781.png)
 
 "New User Login" will arouse another login window except the current one as I've mentioned before. Meanwhile "Login with another user" will exit the current user and arouse the new login window.
 
