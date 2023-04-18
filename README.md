@@ -127,7 +127,7 @@ Now you should send what you want with your friends! If you type some text messa
 
 ## Other Functions
 
-###### Sending Pictures and Files
+#### Sending Pictures and Files
 
 Use the "Files" button to choose an image.
 
@@ -135,13 +135,13 @@ The files function will do for all kinds of files. Folders are not supported cur
 
 If you send a picture (image files, jpg/jpeg/gif/bmp/tif/tiff), both you and the receiver can see the pictures on the screen and the receiver will get a reminder asking him/her whether he/she wants the file to be saved. Since Files, including Images **will not be recorded by the history** function, you should save the file if necessary, you cannot save the image after this chance, either!
 
-###### Message History
+#### Message History
 
 Your conversation with another user will be faithfully recorded even after you exit because they are stored in the database.
 
 Note that emoji and files will not be recorded. The former is not important (I think) and the latter one is technically hard to maintain in databases. I'll try to improve this in the future if possible.
 
-###### Actions Menu
+#### Actions Menu
 
 ![image-20230417232156781](assets/image-20230417232156781.png)
 
