@@ -79,10 +79,13 @@ public class Server {
                             case MessageType.MESSAGE_LOGIN_ATTEMPT -> {
                                 String username = message.getSender();
                                 String password = message.getContent();
-                                //TODO To check whether this user has already login
+                                // Check whether this user has already logged in
+                                boolean userAlreadyLoggedIn = connectedUsers.stream()
+                                        .anyMatch(userConnection -> userConnection.getUser().getUsername().equals(username));
+
                                 User user;
                                 Message responseMessage = new Message();
-                                if ((user = checkUser(username, password)) != null) {
+                                if (!userAlreadyLoggedIn && (user = checkUser(username, password)) != null) {
                                     responseMessage.setMesType(MessageType.MESSAGE_LOGIN_SUCCESSFUL);
                                     responseMessage.setUser(user);
                                     connectedUsers.add(new UserConnection(user, socket.getInetAddress().getHostAddress(), socket.getPort(), outputStream));

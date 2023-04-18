@@ -12,6 +12,7 @@ import java.sql.SQLException;
  * Date: 2023/3/23
  * WELCOME!
  */
+@SuppressWarnings("All")
 public class User implements Serializable {
         @Serial
         private static final long serialVersionUID = 1L;

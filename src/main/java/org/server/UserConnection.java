@@ -12,6 +12,7 @@ import java.io.Serializable;
  * This class is to maintain a user connection, it includes a user and its network setting
  * Used in Chatting Socket Programming
  */
+@SuppressWarnings("All")
 public class UserConnection implements Serializable {
     public static final long serialVersionUID = 1L;
     private User user;

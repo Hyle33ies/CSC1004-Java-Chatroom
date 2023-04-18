@@ -10,6 +10,7 @@ import java.util.ArrayList;
  * Date: 2023/3/23
  * WELCOME!
  */
+@SuppressWarnings("All")
 public class Message implements Serializable {
     public static final long serialVersionUID = 1L;
     private String sender;

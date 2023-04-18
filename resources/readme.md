@@ -107,6 +107,8 @@ Now you should enter this GUI!
 
 To generate multiple users to simulate multi-client chat, you can click on "New User Login" to arouse another login window, you can login with another user. **Don't use** your current user! This will cause confusion when chatting (you cannot get yourself while Getting Online Friends).
 
+*update: The confusion here is solved in the newest version. If you have logged in, you'll be banned from logging with the same user!*
+
 The login window may be hidden behind your Chatroom window.
 
 Now you should have two users online!
