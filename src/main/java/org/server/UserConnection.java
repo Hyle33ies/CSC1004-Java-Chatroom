@@ -28,12 +28,6 @@ public class UserConnection implements Serializable {
                 '}';
     }
 
-    public UserConnection(User user, String ipAddress, int port) {
-        this.user = user;
-        this.ipAddress = ipAddress;
-        this.port = port;
-    }
-
     public UserConnection(User user, String ipAddress, int port, ObjectOutputStream outputStream) {
         this.user = user;
         this.ipAddress = ipAddress;

@@ -75,7 +75,7 @@ public class Chatroom extends JFrame {
         super.processWindowEvent(e);
     }
 
-
+    @SuppressWarnings("All")
     private void connectToServer(String serverAddress, int serverPort) {
         try {
             socket = new Socket(serverAddress, serverPort);
@@ -86,8 +86,9 @@ public class Chatroom extends JFrame {
             Message updateOutputStreamMessage = new Message();
             updateOutputStreamMessage.setSender(current_user.getUsername());
             updateOutputStreamMessage.setMesType(MessageType.MESSAGE_UPDATE_OUTPUT_STREAM);
+            // Tell the server this user is online
             output.writeObject(updateOutputStreamMessage);
-            sendUpdatedPort();
+            sendUpdatedPort(); // update the port number
             listenToIncomingMessages();
         } catch (IOException e) {
             e.printStackTrace();
@@ -95,6 +96,7 @@ public class Chatroom extends JFrame {
         }
     }
 
+    @SuppressWarnings("All")
     protected void start() {
         mainFrame = new JFrame("Chat Application");
         mainFrame.setSize(800, 600);
@@ -113,7 +115,7 @@ public class Chatroom extends JFrame {
         // First Menu: Actions
         JMenu actionsMenu = new JMenu("Actions");
     /*
-        // Add a Friend menu item
+        // Add a Friend menu item, no long needed since we have "Get Online Users" button
         JMenuItem addFriendMenuItem = new JMenuItem("Add a Friend");
         addFriendMenuItem.addActionListener(e -> {
             AddUserDialog addUserDialog = new AddUserDialog(mainFrame);
@@ -187,36 +189,33 @@ public class Chatroom extends JFrame {
         });
         actionsMenu.add(updateProfileMenuItem);
 
-        // add emoji menu item
+        // add emoji menu item, do not confuse it with addEmojis() method!
         JMenuItem addEmojiMenuItem = new JMenuItem("Add a new emoji");
-        addEmojiMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JDialog fileChooserDialog = new JDialog();
-                fileChooserDialog.setAlwaysOnTop(true);
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setAcceptAllFileFilterUsed(false);
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "png", "jpg", "jpeg", "gif", "bmp", "tiff", "tif");
-                fileChooser.setFileFilter(filter);
+        addEmojiMenuItem.addActionListener(e -> {
+            JDialog fileChooserDialog = new JDialog();
+            fileChooserDialog.setAlwaysOnTop(true);
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "png", "jpg", "jpeg", "gif", "bmp", "tiff", "tif");
+            fileChooser.setFileFilter(filter);
 
-                fileChooser.addActionListener(e1 -> {
-                    if (e1.getActionCommand().equals(JFileChooser.APPROVE_SELECTION)) {
-                        File selectedFile = fileChooser.getSelectedFile();
-                        try {
-                            Files.copy(selectedFile.toPath(), new File("resources/emoji/" + selectedFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                            JOptionPane.showMessageDialog(null, "New emoji added successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                            JOptionPane.showMessageDialog(null, "Failed to add the new emoji. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
-                        }
+            fileChooser.addActionListener(e1 -> {
+                if (e1.getActionCommand().equals(JFileChooser.APPROVE_SELECTION)) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    try {
+                        Files.copy(selectedFile.toPath(), new File("resources/emoji/" + selectedFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        JOptionPane.showMessageDialog(null, "New emoji added successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(null, "Failed to add the new emoji. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
-                    fileChooserDialog.dispose();
-                });
+                }
+                fileChooserDialog.dispose();
+            });
 
-                fileChooserDialog.add(fileChooser);
-                fileChooserDialog.pack();
-                fileChooserDialog.setVisible(true);
-            }
+            fileChooserDialog.add(fileChooser);
+            fileChooserDialog.pack();
+            fileChooserDialog.setVisible(true);
         });
         actionsMenu.add(addEmojiMenuItem);
         // Friends list panel
@@ -254,13 +253,7 @@ public class Chatroom extends JFrame {
                 getOnlineFriendsMessage.setMesType(MessageType.MESSAGE_GET_ONLINE_FRIEND);
                 getOnlineFriendsMessage.setSender(current_user.getUsername());
                 output.writeObject(getOnlineFriendsMessage);
-                // Get
-//                Message responseMessage = (Message) input.readObject();
-//                if (responseMessage.getMesType().equals(MessageType.MESSAGE_RET_ONLINE_FRIEND)) {
-//                    ArrayList<UserConnection> onlineFriends = responseMessage.getUserList();
-//                    friendsListConnection = onlineFriends;//update the connection list
-//                    updateFriendsList(onlineFriends, current_user.getUsername());
-//                }
+                // Get, implemented in the listenToIncomingMessages() method
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -276,7 +269,7 @@ public class Chatroom extends JFrame {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 User user = (User) value;
-                String displayText = user.getUsername(); // TODO customize the display text to include more information about the user
+                String displayText = user.getUsername(); // TODO (may never) customize the display text to include more information about the user
                 return super.getListCellRendererComponent(list, displayText, index, isSelected, cellHasFocus);
             }
         });
@@ -388,13 +381,13 @@ public class Chatroom extends JFrame {
         messageScrollPane = new JScrollPane(messagePane);
         chatWithPanel.add(messageScrollPane, BorderLayout.CENTER);
 
-        //Typing area
+        // Typing area
         JPanel typingPanel = new JPanel(new BorderLayout());
         messageField = new JTextArea(3, 50);
         JScrollPane typingScrollPane = new JScrollPane(messageField);
         typingPanel.add(typingScrollPane, BorderLayout.CENTER);
 
-        //Submit Button
+        // Submit Button
         JButton submitButton = new JButton("Submit");
         typingPanel.add(submitButton, BorderLayout.EAST);
         submitButton.addActionListener(e -> submitMessage());
@@ -413,7 +406,7 @@ public class Chatroom extends JFrame {
             }
         });
 
-        //TODO Emoji Function
+        // Emoji Function
         JButton emojiButton = new JButton("Emoji");
         emojiButton.setPreferredSize(new Dimension(80, 20));
         // Add actionListener for emojiButton here
@@ -453,7 +446,7 @@ public class Chatroom extends JFrame {
             User selectedUser = friendsList.getSelectedValue();
             if (selectedUser != null) {
                 try {
-                    PreparedStatement statement = connection.prepareStatement("SELECT sender, getter, content, send_time FROM message_history WHERE (sender = ? AND getter = ?) OR (sender = ? AND getter = ?) ORDER BY send_time ASC");
+                    PreparedStatement statement = connection.prepareStatement("SELECT sender, getter, content, send_time FROM message_history WHERE (sender = ? AND getter = ?) OR (sender = ? AND getter = ?) ORDER BY send_time");
                     statement.setString(1, current_user.getUsername());
                     statement.setString(2, selectedUser.getUsername());
                     statement.setString(3, selectedUser.getUsername());
@@ -594,6 +587,7 @@ public class Chatroom extends JFrame {
         messageField.setWrapStyleWord(true);
     }
 
+    @SuppressWarnings("All")
     private void appendMessageToChatPane(String sender, JTextPane chatPane, String message, String sendTime, boolean isSender) {
         chatPane.setContentType("text/html");
         HTMLEditorKit editorKit = (HTMLEditorKit) chatPane.getEditorKit();
@@ -612,13 +606,16 @@ public class Chatroom extends JFrame {
 
 
 
+    @SuppressWarnings("All")
     @Deprecated
     private String replaceEmojiWithHTML(String content) {
+        // This method is used to replace the emoji with respective HTML code to display it
+        // Now in another way, I use StyledDocument to append the emoji/picture in the chat box
         String regex = "emoji_\\d+\\.(?:png|jpg|jpeg|gif|bmp|tiff|tif)";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(content);
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String emojiFilename = matcher.group();
             String emojiPath = "resources/emoji/" + emojiFilename;
@@ -631,13 +628,13 @@ public class Chatroom extends JFrame {
 
 
     @Deprecated
+    @SuppressWarnings("All")
     // No more needed, used to add a friend manually
     static class AddUserDialog extends JDialog {
         private final JTextField userNameField;
         private final JTextField ipAddressField;
         private final JTextField portField;
         private final JButton addButton;
-        private String newUserName;
 
         public AddUserDialog(JFrame owner) {
             super(owner, "Add User", true);
@@ -657,7 +654,7 @@ public class Chatroom extends JFrame {
             add(addButton);
 
             addButton.addActionListener(e -> {
-                newUserName = userNameField.getText().trim();
+                // newUserName = userNameField.getText().trim();
                 dispose();
             });
 
@@ -799,6 +796,7 @@ public class Chatroom extends JFrame {
                     Message incomingMessage = (Message) input.readObject();
                     switch (incomingMessage.getMesType()) {
                         case MessageType.MESSAGE_RET_ONLINE_FRIEND -> {
+                            // Fetch the online friend list
                             ArrayList<UserConnection> onlineFriends = incomingMessage.getUserList();
                             friendsListConnection = onlineFriends; // Update the connection list
                             updateFriendsList(onlineFriends, current_user.getUsername());
@@ -815,6 +813,7 @@ public class Chatroom extends JFrame {
                             });
                         }
                         case MessageType.MESSAGE_FILE_TRANSFER -> {
+                            // Two cases: common files and image files
                             System.out.println("Receive a File from " + incomingMessage.getSender());
                             String sender = incomingMessage.getSender();
                             String fileName = incomingMessage.getFileName();
@@ -827,8 +826,6 @@ public class Chatroom extends JFrame {
                                     ImageIcon imageIcon = new ImageIcon(decodedBytes);
                                     JTextPane chatPane = getChatPaneForUser(sender);
                                     appendImageToChatPane(sender, chatPane, imageIcon, true);
-//                                    chatPane = getChatPaneForUser(current_user.getUsername());
-//                                    appendImageToChatPane(sender, chatPane, imageIcon,true);
                                 });
                             }
 
@@ -968,6 +965,7 @@ public class Chatroom extends JFrame {
     }
 
     private void appendImageToChatPane(String sender, JTextPane chatPane, ImageIcon imageIcon, boolean flag) {
+        // Used StyledDocument to append image to chat box
         StyledDocument doc = chatPane.getStyledDocument();
         Style defaultStyle = doc.getStyle(StyleContext.DEFAULT_STYLE);
         Style senderStyle = doc.addStyle("SenderStyle", defaultStyle);
@@ -987,8 +985,13 @@ public class Chatroom extends JFrame {
     }
 
     private void addEmojis(JPanel emojiPanel) {
+        // This method is to SEND the emoji, the manual loading is at about line 200.
+        // In charge of anything except appending the emoji on the user's own window, which is done by the next method.
+        // Disadvantage: Cannot adjust the size of the picture, so the resolution ratio may not be suitable
         File emojiFolder = new File("resources/emoji");
-        File[] emojiFiles = emojiFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".png")
+        // Currently supported forms
+        File[] emojiFiles = emojiFolder.listFiles((dir, name) ->
+                   name.toLowerCase().endsWith(".png")
                 || name.toLowerCase().endsWith(".jpg")
                 || name.toLowerCase().endsWith(".jpeg")
                 || name.toLowerCase().endsWith(".gif")
@@ -1004,6 +1007,7 @@ public class Chatroom extends JFrame {
                     JButton emojiButton = new JButton(emojiIcon);
                     emojiButton.addActionListener(e -> {
                         User selectedUser = friendsList.getSelectedValue();
+                        // Update friends first
 
                         String selectedUsername = selectedUser != null ? selectedUser.getUsername() : null;
                         if (selectedUsername == null) {
@@ -1013,6 +1017,7 @@ public class Chatroom extends JFrame {
 
                         String emojiFilename = emojiFile.getName();
 
+                        // Send the message to server
                         Message message = new Message();
                         message.setSender(current_user.getUsername());
                         message.setGetter(selectedUsername);
@@ -1037,8 +1042,10 @@ public class Chatroom extends JFrame {
     }
 
     private void appendEmojiToChatPane(String sender, JTextPane chatPane, String emojiFilename) {
+        // Cooperate with addEmojis() method, this is to append it on the chat box.
         try {
             File emojiFile = new File("resources/emoji/" + emojiFilename);
+            // Fetch the file by its name
             BufferedImage emojiImage = ImageIO.read(emojiFile);
             ImageIcon emojiIcon = new ImageIcon(emojiImage.getScaledInstance(32, 32, Image.SCALE_SMOOTH));
 

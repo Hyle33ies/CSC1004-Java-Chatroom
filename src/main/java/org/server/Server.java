@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@SuppressWarnings("All")
 public class Server {
     private final int PORT = 8889;
     private Connection connection;
@@ -187,7 +188,8 @@ public class Server {
 
             } catch (IOException | ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
-            } finally {
+            }
+//            finally {
 //                try {
 //                    if (outputStream != null) outputStream.close();
 //                    if (inputStream != null) if (outputStream != null) {
@@ -198,7 +200,7 @@ public class Server {
 //                } catch (IOException e) {
 //                    e.printStackTrace();
 //                }
-            }
+//            }
         }
     }
 

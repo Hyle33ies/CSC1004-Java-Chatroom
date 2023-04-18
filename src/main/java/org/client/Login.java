@@ -1,10 +1,9 @@
 package org.client;
 
-import org.setting.Network_setting;
-import org.setting.Network_setting.Network_Setting;
+import org.client.tools.Message;
 import org.client.tools.MessageType;
 import org.client.tools.User;
-import org.client.tools.Message;
+import org.setting.Network_setting.Network_Setting;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,14 +25,15 @@ public class Login {
 
     public Login() throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
-        Network_Setting ns = new Network_Setting();
+        Network_Setting ns = new Network_Setting(); // update the database setting
         System.out.println("Network Setting: " + ns);
         connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
     }
 
     public void start() {
-        frame = new JFrame("Welcome to Chatroom v1.1.15");
+        frame = new JFrame("Welcome to Chatroom v1.1.20");
 
+        // Set the default close operation for the frame
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -53,9 +53,10 @@ public class Login {
     }
 
     protected void initComponents() {
+        // This method creates the basic layout of all components
         frame.setLayout(new GridBagLayout());
         AnimatedBackgroundPanel backgroundPanel = new AnimatedBackgroundPanel();
-        backgroundPanel.setOpaque(false);
+        backgroundPanel.setOpaque(false); // To enable the background animation to show
         frame.setContentPane(backgroundPanel);
 
         // Create a transparent panel for login components
@@ -96,6 +97,7 @@ public class Login {
         c.gridy = 2;
         loginPanel.add(rememberMeCheckBox, c);
 
+        // Enable animation checkbox
         JCheckBox animationCheckBox = new JCheckBox("Enable Animation");
         animationCheckBox.setSelected(true);
         c.gridx = 1;
@@ -111,13 +113,15 @@ public class Login {
         });
 
         try {
+            // To see if the checkbox was ticked last time the user logged in
+            // The database will store it if so. Otherwise, database will delete the record and the function returns false
             boolean rememberedUserExists = loadRememberedUser(usernameField, passwordField);
             rememberMeCheckBox.setSelected(rememberedUserExists);
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
 
-        // Login and Register buttons
+        // Login and Register and Password Recovery buttons
         JButton loginButton = new JButton("Login");
         c.gridx = 0;
         c.gridy = 4;
@@ -132,6 +136,7 @@ public class Login {
         JButton forgetPasswordButton = new JButton("Password Recovery");
         c.gridx = 2;
         c.gridy = 4;
+        // This piece of code should be written in a new method... But I'm too lazy to move it
         forgetPasswordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -170,6 +175,7 @@ public class Login {
                         String email = emailField.getText();
 
                         try {
+                            // Check the combination of username and email
                             String sql = "SELECT * FROM QandA WHERE username = ? AND email = ?";
                             PreparedStatement statement = connection.prepareStatement(sql);
                             statement.setString(1, username);
@@ -183,6 +189,7 @@ public class Login {
                                 emailField.setText("");
                             } else {
                                 verifyFrame.dispose();
+                                // Load the security questions
                                 String question1 = result.getString("question1");
                                 String answer1 = result.getString("answer1");
                                 String question2 = result.getString("question2");
@@ -218,6 +225,7 @@ public class Login {
                                         public void actionPerformed(ActionEvent e) {
                                             String userAnswer1 = answer1Field.getText();
                                             String userAnswer2 = answer2Field.getText();
+                                            // verify the answers
 
                                             boolean answer1Correct = question1 == null || userAnswer1.equals(answer1);
                                             boolean answer2Correct = question2 == null || userAnswer2.equals(answer2);
@@ -269,6 +277,11 @@ public class Login {
                                                             PreparedStatement checkOldPasswordStatement = connection.prepareStatement(checkOldPasswordSql);
                                                             checkOldPasswordStatement.setString(1, username);
                                                             ResultSet resultSet = checkOldPasswordStatement.executeQuery();
+
+                                                            // The password should obey three rules:
+                                                            // 1. The old password should be correct
+                                                            // 2. The new password and the confirmation password should be the same
+                                                            // 3. The new password should be between 6 and 20 characters
 
                                                             if (resultSet.next()) {
                                                                 String storedPassword = resultSet.getString("password");
@@ -335,6 +348,7 @@ public class Login {
         });
         loginPanel.add(forgetPasswordButton, c);
 
+        // Register function, see "RegisterWindow" class
         registerButton.addActionListener(e -> {
             try {
                 openRegisterWindow();
@@ -360,6 +374,7 @@ public class Login {
         displayedVerificationCode.setHorizontalAlignment(JLabel.CENTER);
         displayedVerificationCode.setPreferredSize(new Dimension(100, 30));
         String[] initialVerificationCode = new String[]{generateVerificationCode()};
+        // Set the verification code to be displayed
         displayedVerificationCode.setText(initialVerificationCode[0]);
         c.gridx = 2;
         c.gridy = 3;
@@ -368,12 +383,15 @@ public class Login {
         displayedVerificationCode.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                // When the displayed verification code is clicked, generate a new verification code
                 initialVerificationCode[0] = generateVerificationCode();
                 displayedVerificationCode.setText(initialVerificationCode[0]);
             }
         });
 
         loginButton.addActionListener(e -> handleLogin(usernameField, passwordField, rememberMeCheckBox, verificationCodeField, initialVerificationCode[0]));
+
+        //
 
         // Menu Bar
         JMenuBar menuBar = new JMenuBar();
@@ -433,6 +451,7 @@ public class Login {
                 String username = usernameField1.getText();
                 String password = new String(passwordField1.getPassword());
 
+                // Update the database setting
                 Network_Setting ns = new Network_Setting(setting, username, password);
 //                try {
 //                    Network_setting.DatabaseInitializer.init();
@@ -475,10 +494,12 @@ public class Login {
                 throw new RuntimeException(ex);
             }
         });
-
-        JMenuItem forgetPasswordMenuItem = new JMenuItem("I forgot my password!");
-
         functionMenu.add(registerMenuItem);
+
+//        JMenuItem forgetPasswordMenuItem = new JMenuItem("I forgot my password!");
+        // Have implemented this function elsewhere
+
+
 //        functionMenu.add(forgetPasswordMenuItem);
 
         menuBar.add(helpMenu);
@@ -528,7 +549,7 @@ public class Login {
                     throw new RuntimeException(ex);
                 }
             } else {
-                showErrorDialog("Wrong username or password!");
+                showErrorDialog("Wrong username/password or you have logged in with this user!");
             }
         } catch (IOException | ClassNotFoundException ex) {
             throw new RuntimeException(ex);
@@ -561,6 +582,7 @@ public class Login {
     }
 
     private boolean loadRememberedUser(JTextField field1, JTextField field2) throws SQLException {
+        // Load the remembered user if the checkbox is ticked
         String sql = "SELECT * FROM user_remember";
         PreparedStatement statement = connection.prepareStatement(sql);
         ResultSet result = statement.executeQuery();
@@ -576,7 +598,7 @@ public class Login {
 
     @Deprecated
     static class ErrorDialog extends JDialog {
-        // Just a simple Dialog
+        // Just a simple Dialog, no longer used because it's ugly
         public ErrorDialog(Frame parent, String message) {
             super(parent, "Error", true);
             JPanel panel = new JPanel();
@@ -595,11 +617,6 @@ public class Login {
         }
     }
 
-    /*
-     * This class is used to show a confirmation dialog when user tries to exit the application.
-     * If user clicks "Yes", the application will exit.
-     * If user clicks "No", the dialog will be closed.
-     */
     public static class ExitConfirmDialog {
         public static void main(String[] args) {
             JFrame frame = new JFrame("My Application");
@@ -664,6 +681,7 @@ public class Login {
     }
 
     private String generateVerificationCode() {
+        // Generate a random verification code
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         int length = 5;
         Random random = new Random();

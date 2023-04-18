@@ -64,6 +64,8 @@ public class Network_setting {
         }
 
         public static void init() throws SQLException {
+            // Create the needed database and tables, if failed, please check if
+            // your chatroom_users database exists, if yes, please drop it.
             try (Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD)) {
                 try (Statement statement = connection.createStatement()) {
                     statement.executeUpdate("CREATE DATABASE `chatroom_users`");

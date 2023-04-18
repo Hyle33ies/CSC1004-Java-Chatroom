@@ -22,15 +22,15 @@ public class RegisterWindow {
         Jframe = new JFrame();
         Jframe.setBackground(Color.lightGray);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        // Adjust the window right in the centre
         x = (int) ((screenSize.getWidth() - Jframe.getWidth()) / 2);
         y = (int) ((screenSize.getHeight() - Jframe.getHeight()) / 2);
         Jframe.setBounds(x - 200, y - 370, 500, 720);
         Jframe.setResizable(false);
-//        JFrame.setLayout(new BorderLayout());
         Jframe.setLayout(null);
-//        Jframe.setAlwaysOnTop(true);
+        Jframe.setAlwaysOnTop(false); // May provide better experience... It's hard to decide who should be on top
         Jframe.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        Jframe.setTitle("Register for new");
+        Jframe.setTitle("Register For a New Account");
         Jframe.setVisible(true);
         Jframe.addWindowListener(new WindowAdapter() {
             @Override
@@ -40,35 +40,37 @@ public class RegisterWindow {
         });
     }
 
+    @SuppressWarnings("All")
     public void start() {
         /*
-        An old version of notice, no longer used
-        //notice
-        Container notice = new Container();
-        notice.setLayout(new FlowLayout());
-        notice.setBounds(10, 0, 500, 115);
+        An old version of notice, no longer used because it's too old-fashioned and not extendable.
+        Don't want to delete it just because I wrote them line by line~
+            //notice
+            Container notice = new Container();
+            notice.setLayout(new FlowLayout());
+            notice.setBounds(10, 0, 500, 115);
 
-        JLabel rule1 = new JLabel("                                Notice", JLabel.LEFT);
-        notice.add(rule1);
-        rule1.setPreferredSize(new Dimension(400, 17));
+            JLabel rule1 = new JLabel("                                Notice", JLabel.LEFT);
+            notice.add(rule1);
+            rule1.setPreferredSize(new Dimension(400, 17));
 
-        JLabel rule2 = new JLabel("1. The length of username/password should be at least 6 and at most 20", JLabel.LEFT);
-        notice.add(rule2);
-        rule2.setPreferredSize(new Dimension(500, 17));
+            JLabel rule2 = new JLabel("1. The length of username/password should be at least 6 and at most 20", JLabel.LEFT);
+            notice.add(rule2);
+            rule2.setPreferredSize(new Dimension(500, 17));
 
-        JLabel rule3 = new JLabel("2. Username/password should only contain numbers, letters and '@#$%^&_'", JLabel.LEFT);
-        notice.add(rule3);
-        rule3.setPreferredSize(new Dimension(500, 17));
+            JLabel rule3 = new JLabel("2. Username/password should only contain numbers, letters and '@#$%^&_'", JLabel.LEFT);
+            notice.add(rule3);
+            rule3.setPreferredSize(new Dimension(500, 17));
 
-        JLabel rule4 = new JLabel("3. The items with '*' are not required", JLabel.LEFT);
-        notice.add(rule4);
-        rule4.setPreferredSize(new Dimension(500, 17));
+            JLabel rule4 = new JLabel("3. The items with '*' are not required", JLabel.LEFT);
+            notice.add(rule4);
+            rule4.setPreferredSize(new Dimension(500, 17));
 
-        JLabel rule5 = new JLabel("4. If you prefer not to say your age, fill out -1", JLabel.LEFT);
-        notice.add(rule5);
-        rule5.setPreferredSize(new Dimension(500, 17));
+            JLabel rule5 = new JLabel("4. If you prefer not to say your age, fill out -1", JLabel.LEFT);
+            notice.add(rule5);
+            rule5.setPreferredSize(new Dimension(500, 17));
 
-        backgroundPanel.add(notice);
+            backgroundPanel.add(notice);
         */
 
         // Add the animated background
@@ -366,7 +368,6 @@ public class RegisterWindow {
                     });
                 } else {
                     //valid information!
-//                    User newUser = new User(s1, s2, age, sex, email, country, city, intro);
                     Connection connection;
                     try {
                         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -454,6 +455,7 @@ public class RegisterWindow {
 
     public static class ErrorDialog extends JDialog {
         public ErrorDialog(JFrame parent, String message) {
+            // Conveniently load a Dialog to warn the user
             super(parent, "Error", true);
             setBounds(parent.getX() + 200, parent.getY() + 200, 300, 150);
             setLayout(new BorderLayout());
@@ -468,6 +470,7 @@ public class RegisterWindow {
     }
 
     static class AnimatedBackgroundPanel2 extends JPanel {
+        // Similar to the one in login window, adjust some parameters
         private static final int BALL_COUNT = 40;
         private static final int MAX_SPEED = 4;
 
@@ -544,7 +547,10 @@ public class RegisterWindow {
 
     }
 
+    @SuppressWarnings("All")
     private boolean storeQandAInDatabase(Connection connection, String userNameFill, String mailFill, String question1Fill, String answer1Fill, String question2Fill, String answer2Fill) {
+        // This method is to update the Q and A of security problems in a database according to the username and email
+        // The user should input them correctly in order to recover the password
         if (question1Fill.isEmpty() && question2Fill.isEmpty()) {
             return true;
         }
