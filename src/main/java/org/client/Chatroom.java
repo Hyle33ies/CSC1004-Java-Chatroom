@@ -4,7 +4,7 @@ import org.setting.Network_setting.Network_Setting;
 import org.client.tools.Message;
 import org.client.tools.MessageType;
 import org.client.tools.User;
-import org.server.UserConnection;
+import org.client.tools.UserConnection;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

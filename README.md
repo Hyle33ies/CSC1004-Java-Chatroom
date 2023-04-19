@@ -151,4 +151,14 @@ Note that emoji and files will not be recorded. The former is not important (I t
 
 "Add a new emoji" allows you to add whatever you like in the emoji set. Of course only images are allowed. The emojis are in reality stored in resources/emoji folder, the GUI doesn't support deleting currently. If you want, go to that folder.
 
+## Techniques Explained
+
+Here I'll briefly introduce how my code work in this project.
+
+Let's First look at the source code structure:![image-20230419140323513](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230419140323513.png) 
+
+
+
+
+
 Other functions are self-explanatory in my opinion. If you have any issues/questions/suggestions about this readme file/my code/my application, feel free to contact me!

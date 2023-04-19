@@ -1,7 +1,5 @@
 package org.client.tools;
 
-import org.server.UserConnection;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 

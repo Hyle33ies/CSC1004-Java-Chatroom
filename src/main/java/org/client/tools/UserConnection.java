@@ -1,4 +1,4 @@
-package org.server;
+package org.client.tools;
 
 import org.client.tools.User;
 
