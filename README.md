@@ -159,7 +159,7 @@ Note that emoji and files will not be recorded. The former is not important (I t
 
 Here I'll briefly introduce how my code work in this project.
 
-Let's First look at the source code structure:![image-20230419140648714](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230419140648714.png) 
+Let's First look at the source code structure:![image-20230419140648714](assets/image-20230419140648714.png) 
 
 The two classes in setting package are introduced in the using tutorial, they are designed to make sure you can run this project on any computer that's equipped with a mySQL. No other purpose served.
 
