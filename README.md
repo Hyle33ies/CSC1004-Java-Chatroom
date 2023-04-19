@@ -57,6 +57,10 @@ See [here](https://guiliang.github.io/courses/cuhk-csc-1004/csc-1004-marking-rul
 
 ## Get Started
 
+*Update 23/4/19: The video tutorial is uploaded and you can see it in the resources folder.*
+
+*Update 23/4/19: The Bi-weekly report which takes 10% of the assessment was also uploaded for anyone's reference. Actually it's very stupid, too. I actually don't follow the schedule I made at the first week. Plans always change, don't they?*
+
 Let's see how the project is implemented.
 
 If you're trying to run the project on your own computer, you should set up your database first!
