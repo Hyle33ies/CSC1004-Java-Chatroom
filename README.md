@@ -8,11 +8,13 @@ This is a Java Project for CUHK-SZ Year-1 Course CSC1004. It takes 60% of all as
 
 This Project implements a Java Chatroom that can support multi-user chatting. However, this is just a toy example and poor imitation of a real chatroom and can only run on one's own laptop and currently don't have a cloud server. So it cannot serve any real-world purpose.
 
-All code are open-sourced with as-much-as-possible-user-friendly comments. Most of the code are self-explained.
+All code are open-sourced with as-much-as-possible-user-friendly comments. Most of the code are self-explanatory.
 
 All code were written in Java. The GUI was written in Java AWT and Java Swing. The knowledge involved also includes Java Socket Programming, JDBC (Java + mySQL), IOStream, multi-thread Programming and so on. Solid Java SE knowledge is also expected in many details like Collection.
 
 The most tricky part in my mind was the IOstream because there're too many of them and I also had to combine them with Socket Programming and Network Knowledge. Some day I spent six hours on the messaging function but finally in vain... It took me around 100-120 hours to finish (including reviewing Java Socket Programming knowledge) this sixty-percent-of-one-unit project.
+
+For more detailed explanations about the code, you may jump to the last part of this README.
 
 ## Assessment / Function List
 
@@ -107,7 +109,7 @@ Now you should enter this GUI!
 
 To generate multiple users to simulate multi-client chat, you can click on "New User Login" to arouse another login window, you can login with another user. **Don't use** your current user! This will cause confusion when chatting (you cannot get yourself while Getting Online Friends).
 
-*update: The confusion here is solved in the newest version. If you have logged in, you'll be banned from logging with the same user!*
+*update 23.4.19: The confusion here is solved in the newest version. If you have logged in, you'll be banned from logging with the same user!*
 
 The login window may be hidden behind your Chatroom window.
 
@@ -135,6 +137,8 @@ The files function will do for all kinds of files. Folders are not supported cur
 
 If you send a picture (image files, jpg/jpeg/gif/bmp/tif/tiff), both you and the receiver can see the pictures on the screen and the receiver will get a reminder asking him/her whether he/she wants the file to be saved. Since Files, including Images **will not be recorded by the history** function, you should save the file if necessary, you cannot save the image after this chance, either!
 
+Currently if you save a file that has identical name with another file, it WILL cover the other one!
+
 #### Message History
 
 Your conversation with another user will be faithfully recorded even after you exit because they are stored in the database.
@@ -151,14 +155,34 @@ Note that emoji and files will not be recorded. The former is not important (I t
 
 "Add a new emoji" allows you to add whatever you like in the emoji set. Of course only images are allowed. The emojis are in reality stored in resources/emoji folder, the GUI doesn't support deleting currently. If you want, go to that folder.
 
-## Techniques Explained
+## Techniques Details Explained and Reflections
 
 Here I'll briefly introduce how my code work in this project.
 
-Let's First look at the source code structure:![image-20230419140323513](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230419140323513.png) 
+Let's First look at the source code structure:![image-20230419140648714](C:\Users\HP\AppData\Roaming\Typora\typora-user-images\image-20230419140648714.png) 
 
+The two classes in setting package are introduced in the using tutorial, they are designed to make sure you can run this project on any computer that's equipped with a mySQL. No other purpose served.
 
+The tools are several classes and interface I use in the application. 
 
+The Message and MessageType are the most important. They are a protocol that client and server side agree on while sending messages. The Message Class is serializable and can be transmitted using IO stream writeObject() while carrying anything we want to tell the other side. The MessageType points out which kind of message it is. It's actually used to facilitate the coding, in essence they are just Strings. Please don't ask me why I don't use the Enum.
 
+At first I actually provided a rather narrow interface, but I had to add in things like FileExtension, fileName, userList stuff which should not appear in a "Message" class to be honest. Here I take a shortcut to avoid using inheritance & polymorphic, and that's not the best practice in OOP programming. Maybe I'll update this if possible in the future.
+
+The User class is self-explainable. It stores the information of each user.
+
+The UserConnection is an underlying structure to store both the User and the network settings. The class right now is not the initial design, either, for I can only access to the outputStream by passing it wrapped in object due to some unknown error (at least to me now) I encountered while trying to connect the user by IP and port. This might be improved in the future, either.
+
+This class is used in both client and server side and should be synchronized any time possible. The logic is simple, it is at the first place maintained in the server side. When a user logs in, store the userConnection in a list and remove it from the list when the user exits the application. The client can apply for it by clicking on the "Get Online Friends" button by sending the message of type "GET_ONLINE_FRIEND". Then the list fetched by the message responded by the server with type "RET_ONLINE_FRIEND" is used to create the friend list implemented by the friendListModel in Chatroom.class. I won't explain the details of Java GUI(Swing) in this file because that's outdated techniques.
+
+Currently the list should be manually fetched, but this can be improved in the future to be real-time.
+
+The entrance of the application is Server.java and Client.java.
+
+The basic idea of server is simple: maintain the online user list, tranfer the messages. The latter is almost the most tricky part. I adopt a threadPool to support real-time chatting between several users. The server should be in charge of listening to incoming messages and dealing with them wisely. The Client side in a similar way. Once you solve the issues with Multi-thread and IO Stream, the other part of the project is actually a matter of time.
+
+I printed many messages in the console in both sides for the convenience of debugging, and I left them on purpose because they are convenient to demonstrate the problems in the programs if there should be future improvement.
+
+The detailed explanation of how the GUI is created and how each kind of messages are dealt with is already in the code comments in an I-think-it-is-user-friendly way. Hope you enjoy reading them.
 
 Other functions are self-explanatory in my opinion. If you have any issues/questions/suggestions about this readme file/my code/my application, feel free to contact me!

@@ -101,7 +101,7 @@ public class Chatroom extends JFrame {
         mainFrame = new JFrame("Chat Application");
         mainFrame.setSize(800, 600);
         mainFrame.setLocationRelativeTo(null);
-        mainFrame.setAlwaysOnTop(true);
+        mainFrame.setAlwaysOnTop(false);
 
         //connect to server
         connectToServer("localhost", 8889);
@@ -192,8 +192,7 @@ public class Chatroom extends JFrame {
         // add emoji menu item, do not confuse it with addEmojis() method!
         JMenuItem addEmojiMenuItem = new JMenuItem("Add a new emoji");
         addEmojiMenuItem.addActionListener(e -> {
-            JDialog fileChooserDialog = new JDialog();
-            fileChooserDialog.setAlwaysOnTop(true);
+            JDialog fileChooserDialog = new JDialog((Frame) null, "Select Emoji", Dialog.ModalityType.APPLICATION_MODAL);
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setAcceptAllFileFilterUsed(false);
             FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "png", "jpg", "jpeg", "gif", "bmp", "tiff", "tif");
@@ -204,19 +203,20 @@ public class Chatroom extends JFrame {
                     File selectedFile = fileChooser.getSelectedFile();
                     try {
                         Files.copy(selectedFile.toPath(), new File("resources/emoji/" + selectedFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                        JOptionPane.showMessageDialog(null, "New emoji added successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(fileChooserDialog, "New emoji added successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
                     } catch (IOException ex) {
                         ex.printStackTrace();
-                        JOptionPane.showMessageDialog(null, "Failed to add the new emoji. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(fileChooserDialog, "Failed to add the new emoji. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
+                    fileChooserDialog.dispose();
                 }
-                fileChooserDialog.dispose();
             });
 
             fileChooserDialog.add(fileChooser);
             fileChooserDialog.pack();
             fileChooserDialog.setVisible(true);
         });
+
         actionsMenu.add(addEmojiMenuItem);
         // Friends list panel
         JPanel friendsListPanel = new JPanel(new BorderLayout());
@@ -998,6 +998,15 @@ public class Chatroom extends JFrame {
                 || name.toLowerCase().endsWith(".bmp")
                 || name.toLowerCase().endsWith(".tiff")
                 || name.toLowerCase().endsWith(".tif"));
+
+        // Sort the files by the last time they're modified.
+        if (emojiFiles != null) {
+            Arrays.sort(emojiFiles, (file1, file2) -> {
+                long lastModified1 = file1.lastModified();
+                long lastModified2 = file2.lastModified();
+                return Long.compare(lastModified1, lastModified2);
+            });
+        }
 
         if (emojiFiles != null) {
             for (File emojiFile : emojiFiles) {
