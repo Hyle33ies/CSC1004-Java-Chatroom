@@ -4,9 +4,20 @@ Last Updated: 2023.5.4
 
 **If you are the course TA and need to grade this project, please skip my nonsence in the introduction and jump to "Getting Started".**
 
-## Table of contents:
+# Table of Contents
 
-[TOC]
+1. [README](#readme)
+2. [Introduction](#introduction)
+3. [Assessment / Function List](#assessment--function-list)
+4. [Tutorials](#getting-started)
+   1. [Getting Started](#getting-started)
+   2. [Multi-Client Chat](#multi-client-chat)
+   3. [Other Functions](#other-functions)
+      1. [Sending Pictures and Files](#sending-pictures-and-files)
+      2. [Message History](#message-history)
+      3. [Actions Menu](#actions-menu)
+
+5. [Techniques Details Explained and Reflections](#techniques-details-explained-and-reflections)
 
 ## Introduction
 
