@@ -1,8 +1,14 @@
 # README
 
-Last Updated: 2023.4.17
+Last Updated: 2023.5.4
 
-**If you are the course TA and need to grade this project, please skip my nonsence here and jump to "Get Started".**
+**If you are the course TA and need to grade this project, please skip my nonsence in the introduction and jump to "Getting Started".**
+
+## Table of contents:
+
+[TOC]
+
+## Introduction
 
 This is a Java Project for CUHK-SZ Year-1 Course CSC1004. It takes 60% of all assessment scheme. For more information, please visit [Course Website](https://guiliang.github.io/courses/cuhk-csc-1004/csc_1004.html) and [Project Requirements](https://guiliang.github.io/courses/cuhk-csc-1004/project-topics/chat_room.html). This project was finished **in April 2023, if you see this project after 2023, all code here cannot speak for my coding skills!**
 
@@ -15,6 +21,10 @@ All code were written in Java. The GUI was written in Java AWT and Java Swing. T
 The most tricky part in my mind was the IOstream because there're too many of them and I also had to combine them with Socket Programming and Network Knowledge. Some day I spent six hours on the messaging function but finally in vain... It took me around 100-120 hours to finish (including reviewing Java Socket Programming knowledge) this sixty-percent-of-one-unit project.
 
 For more detailed explanations about the code, you may jump to the last part of this README.
+
+If you are a future student in CUHKSZ learning CSC1004 and encounter problems about this project, feel free to contact me through school email.
+
+ID: 122090180
 
 ## Assessment / Function List
 
@@ -55,11 +65,11 @@ See [here](https://guiliang.github.io/courses/cuhk-csc-1004/csc-1004-marking-rul
    8. Remember the password. If you ticked the checkbox and login, you can avoid inputting your password again and again on your computer.
    9. Look up and Update your profile. After login, you could feel free to update your personal information, which will be recorded by the database, too.
 
-## Get Started
+## Getting Started
 
 *Update 23/4/19: The video tutorial is uploaded and you can see it in the resources folder.*
 
-*Update 23/4/19: The Bi-weekly report which takes 10% of the assessment was also uploaded for anyone's reference. Actually it's very stupid, too. I actually don't follow the schedule I made at the first week. Plans always change, don't they?*
+*Update 23/4/19: The Bi-weekly report which takes 10% of the assessment was also uploaded for anyone's reference. I actually don't follow the schedule I made at the first week. Plans always change, don't they?*
 
 Let's see how the project is implemented.
 
@@ -67,13 +77,15 @@ If you're trying to run the project on your own computer, you should set up your
 
 ![image-20230417221005236](assets/image-20230417221005236.png)
 
-First, click on Database Setting. You should copy the setting for now because the application doesn't support other databases.
+First, click on Database Setting. You should **copy the setting** for now because the application doesn't support other databases.
 
 ![image-20230417221127361](assets/image-20230417221127361.png)
 
 The URL should be modified only when the port number is not by default 3306. Then input your mySQL username and password.
 
-Make sure you **don't** have a database called "chatroom_users" now!
+~~Make sure you **don't** have a database called "chatroom_users" now!~~
+
+*Update 23/5/4: The Init_Database process is updated and now it's easier to use. It will automatically drop the database "chatroom_users" such that it's easier to test the code. Meanwhile, the bug that failing the connection when you test on your own computer is fixed.* 
 
 ![image-20230417221506771](assets/image-20230417221506771.png)
 

@@ -1,9 +1,6 @@
 package org.setting;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 /**
  * User: HP
@@ -51,7 +48,8 @@ public class Network_setting {
 
     public static class DatabaseInitializer {
 
-        private static final String JDBC_URL = Network_Setting.Personalized_setting;
+        private static final String JDBC_URL = "jdbc:mysql://localhost:3306";
+        private static final String DATABASE_NAME = "chatroom_users";
         private static final String USERNAME = Network_Setting.Personalized_username;
         private static final String PASSWORD = Network_Setting.Personalized_password;
 
@@ -64,13 +62,21 @@ public class Network_setting {
         }
 
         public static void init() throws SQLException {
-            // Create the needed database and tables, if failed, please check if
-            // your chatroom_users database exists, if yes, please drop it.
-            try (Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD)) {
-                try (Statement statement = connection.createStatement()) {
-                    statement.executeUpdate("CREATE DATABASE `chatroom_users`");
+            try (Connection serverConnection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD)) {
+                try (Statement serverStatement = serverConnection.createStatement()) {
+                    ResultSet resultSet = serverStatement.executeQuery("SHOW DATABASES LIKE '" + DATABASE_NAME + "'");
+                    if (resultSet.next()) {
+                        // If the "chatroom_users" database exists, delete it along with all its data
+                        serverStatement.executeUpdate("DROP DATABASE `" + DATABASE_NAME + "`");
+                    }
+                    serverStatement.executeUpdate("CREATE DATABASE IF NOT EXISTS `" + DATABASE_NAME + "`");
+                }
+            }
 
-                    statement.executeUpdate("USE `chatroom_users`");
+            // Connect to the newly created database
+            try (Connection connection = DriverManager.getConnection(JDBC_URL + "/" + DATABASE_NAME, USERNAME, PASSWORD)) {
+                try (Statement statement = connection.createStatement()) {
+                    statement.executeUpdate("USE `" + DATABASE_NAME + "`");
 
                     statement.executeUpdate("CREATE TABLE `users` (" +
                             "  `id` int NOT NULL AUTO_INCREMENT," +
