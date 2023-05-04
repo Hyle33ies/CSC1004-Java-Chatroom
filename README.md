@@ -21,19 +21,19 @@ Last Updated: 2023.5.4
 
 ## Introduction
 
-This is a Java Project for CUHK-SZ Year-1 Course CSC1004. It takes 60% of all assessment scheme. For more information, please visit [Course Website](https://guiliang.github.io/courses/cuhk-csc-1004/csc_1004.html) and [Project Requirements](https://guiliang.github.io/courses/cuhk-csc-1004/project-topics/chat_room.html). This project was finished **in April 2023, if you see this project after 2023, all code here cannot speak for my coding skills!**
+This is a Java project for the CUHK-SZ Year-1 course, **CSC1004**. It accounts for 60% of the overall assessment. For more information, please visit [Course Website](https://guiliang.github.io/courses/cuhk-csc-1004/csc_1004.html) and [Project Requirements](https://guiliang.github.io/courses/cuhk-csc-1004/project-topics/chat_room.html). This project was completed in April 2023, so if you're viewing it after that time, **please note that the code may not reflect my current coding skills**!
 
-This Project implements a Java Chatroom that can support multi-user chatting. However, this is just a toy example and poor imitation of a real chatroom and can only run on one's own laptop and currently don't have a cloud server. So it cannot serve any real-world purpose.
+This project implements a Java Chatroom that can support multi-user chatting. However, it's just a basic example and not a fully-functioning chatroom, as it can only run on a local machine and doesn't have cloud server support. So, it's not suitable for real-world use yet.
 
-All code are open-sourced with as-much-as-possible-user-friendly comments. Most of the code are self-explanatory.
+The code is open-source and comes with user-friendly comments as much as possible. Most of the code is self-explanatory.
 
-All code were written in Java. The GUI was written in Java AWT and Java Swing. The knowledge involved also includes Java Socket Programming, JDBC (Java + mySQL), IOStream, multi-thread Programming and so on. Solid Java SE knowledge is also expected in many details like Collection.
+All code was written in Java, with the GUI developed using Java AWT and Java Swing. The project also involves Java Socket Programming, JDBC (Java + MySQL), IOStream, multi-thread programming, and other Java SE knowledge like Collections.
 
-The most tricky part in my mind was the IOstream because there're too many of them and I also had to combine them with Socket Programming and Network Knowledge. Some day I spent six hours on the messaging function but finally in vain... It took me around 50-60 hours to finish (including reviewing Java Socket Programming knowledge) this sixty-percent-of-one-unit project.
+The most challenging part for me was IOStream, as there are many types to manage and I had to combine them with Socket Programming and Networking knowledge. One day I spent six hours on the messaging function without success... It took me around 50-60 hours to complete this project, which represents sixty percent of one course unit (including reviewing Java Socket Programming knowledge and stuff like writing this README or recording the video).
 
-For more detailed explanations about the code, you may jump to the last part of this README.
+For more detailed explanations about the code, please refer to the last part of this README.
 
-If you are a future student in CUHKSZ learning CSC1004 and encounter problems about this project, feel free to contact me through school email.
+If you're a future CUHKSZ student taking CSC1004 and need help with this project, feel free to contact me through the school email or any other way.
 
 ID: 122090180
 
@@ -82,11 +82,11 @@ See [here](https://guiliang.github.io/courses/cuhk-csc-1004/csc-1004-marking-rul
 
 *Update 23/4/19: The video tutorial is uploaded and you can see it in the resources folder.*
 
-*Update 23/4/19: The Bi-weekly report which takes 10% of the assessment was also uploaded for anyone's reference. I actually don't follow the schedule I made at the first week. Plans always change, don't they?*
+*Update 23/4/19: The Bi-weekly report, which accounts for 10% of the assessment, has also been uploaded for reference. I didn't actually stick to the schedule I made in the first week. Plans change, don't they?*
 
-Let's see how the project is implemented.
+Let's take a look at how the project is implemented.
 
-If you're trying to run the project on your own computer, you should set up your database first!
+If you want to run the project on your own computer, you need to set up your database first!
 
 ![image-20230504112813688](assets/image-20230504112813688.png)
 
@@ -186,32 +186,32 @@ Note that emoji and files will not be recorded. The former is not important (I t
 
 ## Techniques Details Explained and Reflections
 
-Here I'll briefly introduce how my code work in this project.
+In this section, I'll provide a brief overview of how my code works in this project.
 
-Let's First look at the source code structure:![image-20230419140648714](assets/image-20230419140648714.png) 
+Let's start by examining the source code structure: ![image-20230419140648714](assets/image-20230419140648714.png) 
 
-The two classes in setting package are introduced in the using tutorial, they are designed to make sure you can run this project on any computer that's equipped with a mySQL. No other purpose served.
+The two classes in the setting package are introduced in the usage tutorial. Their purpose is to ensure that the project runs on any computer equipped with MySQL. They don't serve any other purpose.
 
-The tools are several classes and interface I use in the application. 
+The tools package contains several classes and interfaces used in the application.
 
-The Message and MessageType are the most important. They are a protocol that client and server side agree on while sending messages. The Message Class is serializable and can be transmitted using IO stream writeObject() while carrying anything we want to tell the other side. The MessageType points out which kind of message it is. It's actually used to facilitate the coding, in essence they are just Strings. Please don't ask me why I don't use the Enum.
+Message and MessageType are the most important. They represent a protocol that the client and server sides agree upon when sending messages. The Message class is serializable and can be transmitted using the IO stream writeObject() method while carrying any information we want to send to the other side. MessageType indicates the type of message being sent. Although it's used to facilitate coding, it's essentially just a String. Please don't ask me why I didn't use Enums.
 
-At first I actually provided a rather narrow interface, but I had to add in things like FileExtension, fileName, userList stuff which should not appear in a "Message" class to be honest. Here I take a shortcut to avoid using inheritance & polymorphic, and that's not the best practice in OOP programming. Maybe I'll update this if possible in the future.
+Initially, I provided a narrower interface, but later added features like FileExtension, fileName, and userList, which honestly shouldn't be part of a "Message" class. I took a shortcut here to avoid using inheritance and polymorphism, which isn't the best OOP practice. I might update this in the future if possible.
 
-The User class is self-explainable. It stores the information of each user.
+The User class is self-explainatory. It stores the information of each user.
 
-The UserConnection is an underlying structure to store both the User and the network settings. The class right now is not the initial design, either, for I can only access to the outputStream by passing it wrapped in object due to some unknown error (at least to me now) I encountered while trying to connect the user by IP and port. This might be improved in the future, either.
+UserConnection is an underlying structure that stores both User and network settings. The current version of this class isn't the initial design either. Due to an unknown error (at least to me), I can only access the outputStream by wrapping it in an object when transmitted because if I try to connect the user by IP and port, it simply fails. This might also be improved in the future.
 
-This class is used in both client and server side and should be synchronized any time possible. The logic is simple, it is at the first place maintained in the server side. When a user logs in, store the userConnection in a list and remove it from the list when the user exits the application. The client can apply for it by clicking on the "Get Online Friends" button by sending the message of type "GET_ONLINE_FRIEND". Then the list fetched by the message responded by the server with type "RET_ONLINE_FRIEND" is used to create the friend list implemented by the friendListModel in Chatroom.class. I won't explain the details of Java GUI(Swing) in this file because that's outdated techniques.
+This class is used on both the client and server sides and should be synchronized whenever possible. The logic is simple: it's initially maintained on the server side. When a user logs in, their userConnection is added to a list and removed when they exit the application. The client can request this list by clicking the "Get Online Friends" button and sending a message of type "GET_ONLINE_FRIEND". The server then responds with a message of type "RET_ONLINE_FRIEND", which is used to create the friend list using the friendListModel in the Chatroom class. I won't go into the details of Java GUI (Swing) in this file, as those techniques are outdated.
 
-Currently the list should be manually fetched, but this can be improved in the future to be real-time.
+Currently, the list must be fetched manually, but this could be improved in the future to update in real-time.
 
 The entrance of the application is Server.java and Client.java.
 
-The basic idea of server is simple: maintain the online user list, tranfer the messages. The latter is almost the most tricky part. I adopt a threadPool to support real-time chatting between several users. The server should be in charge of listening to incoming messages and dealing with them wisely. The Client side in a similar way. Once you solve the issues with Multi-thread and IO Stream, the other part of the project is actually a matter of time.
+The basic idea behind the server is simple: maintain the online user list and transfer messages. The latter is arguably the most challenging part. I use a threadPool to support real-time chatting among multiple users. The server is responsible for listening to incoming messages and handling them appropriately. The client side operates similarly. Once you resolve issues with multi-threading and IO streams, the rest of the project is mainly a matter of time.
 
-I printed many messages in the console in both sides for the convenience of debugging, and I left them on purpose because they are convenient to demonstrate the problems in the programs if there should be future improvement.
+I printed many messages in the console on both sides for debugging purposes, and I left them there intentionally, as they can help demonstrate problems in the program for future improvements.
 
-The detailed explanation of how the GUI is created and how each kind of messages are dealt with is already in the code comments in an I-think-it-is-user-friendly way. Hope you enjoy reading them.
+The detailed explanation of how the GUI is created and how each type of message is handled can be found in the code comments, which I believe are user-friendly. I hope you enjoy reading them.
 
-Other functions are self-explanatory in my opinion. If you have any issues/questions/suggestions about this readme file/my code/my application, feel free to contact me!
+In my opinion, other functions are self-explanatory. If you have any questions, issues, or suggestions about this README file, my code, or my application, please feel free to contact me!
