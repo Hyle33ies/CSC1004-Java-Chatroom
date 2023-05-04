@@ -29,13 +29,15 @@ All code are open-sourced with as-much-as-possible-user-friendly comments. Most 
 
 All code were written in Java. The GUI was written in Java AWT and Java Swing. The knowledge involved also includes Java Socket Programming, JDBC (Java + mySQL), IOStream, multi-thread Programming and so on. Solid Java SE knowledge is also expected in many details like Collection.
 
-The most tricky part in my mind was the IOstream because there're too many of them and I also had to combine them with Socket Programming and Network Knowledge. Some day I spent six hours on the messaging function but finally in vain... It took me around 100-120 hours to finish (including reviewing Java Socket Programming knowledge) this sixty-percent-of-one-unit project.
+The most tricky part in my mind was the IOstream because there're too many of them and I also had to combine them with Socket Programming and Network Knowledge. Some day I spent six hours on the messaging function but finally in vain... It took me around 50-60 hours to finish (including reviewing Java Socket Programming knowledge) this sixty-percent-of-one-unit project.
 
 For more detailed explanations about the code, you may jump to the last part of this README.
 
 If you are a future student in CUHKSZ learning CSC1004 and encounter problems about this project, feel free to contact me through school email.
 
 ID: 122090180
+
+Points gotten in this project: ? / 100
 
 ## Assessment / Function List
 
