@@ -11,7 +11,7 @@ public class Network_setting {
     public static class Network_Setting{
         private static String Personalized_setting = "jdbc:mysql://localhost:3306/chatroom_users";
         private static String Personalized_username = "root";
-        private static String Personalized_password = "@Frankett2004";
+        private static String Personalized_password = "root";
 
         @Override
         public String toString() {

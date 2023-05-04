@@ -88,13 +88,13 @@ Let's see how the project is implemented.
 
 If you're trying to run the project on your own computer, you should set up your database first!
 
-![image-20230417221005236](assets/image-20230417221005236.png)
+![image-20230504112813688](assets/image-20230504112813688.png)
 
-First, click on Database Setting. You should **copy the setting** for now because the application doesn't support other databases.
+Goto the Network_setting.java, find the code shown above, and replace the username and password with yours!
 
-![image-20230417221127361](assets/image-20230417221127361.png)
+You do not need to modify the setting string. You should have **mysql 8.0** or above, if your version number is "5.x", you may have to modify 3306 with 13306, notice that you should modify the 3306 in the DatabaseInitializer in this class, too!
 
-The URL should be modified only when the port number is not by default 3306. Then input your mySQL username and password.
+Now, please run "Init_Database.java" before you launch the client and server side.
 
 ~~Make sure you **don't** have a database called "chatroom_users" now!~~
 
@@ -102,13 +102,13 @@ The URL should be modified only when the port number is not by default 3306. The
 
 ![image-20230417221506771](assets/image-20230417221506771.png)
 
-Look at the Project Structure, the main code are divided into three parts. You should know click on setting/Init_Database, and run the main method directly. The database and tables needed are prepared automatically.
+Look at the Project Structure, the main code are divided into three parts.
 
 The other two runnable programs are "client/Client" and "server/Server". Please run them.
 
 The server doesn't have a GUI and logs will be outputed in the system console. You don't need to understand them in order to use this application.
 
-The client side should look like this.![](assets/image-20230417223031903.png)
+The client side should look like this. **If this window is successfully launched, it means your database setting is correct**, otherwise, please update your database setting with the instructions above.![](assets/image-20230417223031903.png)
 
 There's a stupid animation here I used to fill the assessment scheme in the past. You can turn it off with the "Enable Animation".
 

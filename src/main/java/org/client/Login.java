@@ -451,7 +451,8 @@ public class Login {
 
         helpMenu.add(exitMenuItem);
         helpMenu.add(readmeMenuItem);
-        helpMenu.add(databaseSettingMenuItem);
+//        helpMenu.add(databaseSettingMenuItem);
+        // Not available for now TODO
 
         JMenu functionMenu = new JMenu("Function");
         JMenuItem registerMenuItem = new JMenuItem("Register a new user for free");
