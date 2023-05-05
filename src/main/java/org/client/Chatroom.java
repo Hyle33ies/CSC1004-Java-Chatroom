@@ -1,10 +1,10 @@
 package org.client;
 
-import org.setting.Network_setting.Network_Setting;
 import org.client.tools.Message;
 import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.client.tools.UserConnection;
+import org.setting.Network_setting;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -55,10 +55,9 @@ public class Chatroom extends JFrame {
 
     public Chatroom(User current_user) throws ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
-        Network_Setting ns = new Network_Setting();
-        System.out.println("Network Setting: " + ns);
+        System.out.println("Network Setting: " + Network_setting.DatabaseInitializer.ToString());
         try {
-            connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
+            connection = DriverManager.getConnection(Network_setting.DatabaseInitializer.getJdbcUrl() + "/" + Network_setting.DatabaseInitializer.getDatabaseName(), Network_setting.DatabaseInitializer.getUSERNAME(), Network_setting.DatabaseInitializer.getPASSWORD());
         } catch (SQLException e) {
             throw new RuntimeException("Error connecting to the database", e);
         }

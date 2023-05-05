@@ -7,58 +7,37 @@ import java.sql.*;
  * Date: 2023/4/15
  * WELCOME!
  */
+@SuppressWarnings("all")
 public class Network_setting {
-    public static class Network_Setting{
-        private static String Personalized_setting = "jdbc:mysql://localhost:3306/chatroom_users";
-        private static String Personalized_username = "root";
-        private static String Personalized_password = "root";
-
-        @Override
-        public String toString() {
-            return "Network_Setting{" +
-                    "Personalized_setting='" + Personalized_setting + '\'' +
-                    ", Personalized_username='" + Personalized_username + '\'' +
-                    ", Personalized_password='" + Personalized_password + '\'' +
-                    '}';
-        }
-
-        public Network_Setting(String personalized_setting, String personalized_username, String personalized_password) {
-            Personalized_setting = personalized_setting;
-            Personalized_username = personalized_username;
-            Personalized_password = personalized_password;
-        }
-
-        public Network_Setting() {
-        }
-
-        public String getPersonalized_setting() {
-            return Personalized_setting;
-        }
-
-        public String getPersonalized_username() {
-            return Personalized_username;
-        }
-
-
-        public String getPersonalized_password() {
-            return Personalized_password;
-        }
-
-    }
-
     public static class DatabaseInitializer {
+        private static final ConfigReader configReader = ConfigReader.getInstance();
+        private static String JDBC_URL = configReader.getProperty("jdbc.url");
+        private static String DATABASE_NAME = configReader.getProperty("database.name");
+        private static String USERNAME = configReader.getProperty("username");
+        private static String PASSWORD = configReader.getProperty("password");
 
-        private static final String JDBC_URL = "jdbc:mysql://localhost:3306";
-        private static final String DATABASE_NAME = "chatroom_users";
-        private static final String USERNAME = Network_Setting.Personalized_username;
-        private static final String PASSWORD = Network_Setting.Personalized_password;
+        public static String getJdbcUrl() {
+            return JDBC_URL;
+        }
 
-        public static void main(String[] args) {
-            try {
-                init();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        public static String getDatabaseName() {
+            return DATABASE_NAME;
+        }
+
+        public static String getUSERNAME() {
+            return USERNAME;
+        }
+
+        public static String getPASSWORD() {
+            return PASSWORD;
+        }
+
+
+        public static String ToString() {
+            return "JDBC_URL: " + JDBC_URL + "\n" +
+                    "DATABASE_NAME: " + DATABASE_NAME + "\n" +
+                    "USERNAME: " + USERNAME + "\n" +
+                    "PASSWORD: " + PASSWORD + "\n";
         }
 
         public static void init() throws SQLException {

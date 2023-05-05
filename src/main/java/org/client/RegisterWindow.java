@@ -1,12 +1,12 @@
 package org.client;
 
+import org.setting.Network_setting;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
-
-import org.setting.Network_setting.Network_Setting;
 
 /**
  * User: HP
@@ -267,6 +267,12 @@ public class RegisterWindow {
                     ErrorDialog ed = new ErrorDialog(Jframe, "Please enter your age!");
                     ed.setVisible(true);
                     return;
+                } else if (ageString.matches("^[0-9]*$") == false) {
+                    //age invalid
+                    System.out.println("Please enter a valid age!");
+                    ErrorDialog ed = new ErrorDialog(Jframe, "Please enter a valid age!");
+                    ed.setVisible(true);
+                    return;
                 }
                 int age = Integer.parseInt(ageString);
                 Checkbox sexCheckbox = sexGroup.getSelectedCheckbox();
@@ -371,9 +377,8 @@ public class RegisterWindow {
                     Connection connection;
                     try {
                         Class.forName("com.mysql.cj.jdbc.Driver");
-                        Network_Setting ns = new Network_Setting();
-                        System.out.println("Network Setting: " + ns);
-                        connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
+                        System.out.println("Network Setting: " + Network_setting.DatabaseInitializer.ToString());
+                        connection = DriverManager.getConnection(Network_setting.DatabaseInitializer.getJdbcUrl() + "/" + Network_setting.DatabaseInitializer.getDatabaseName(), Network_setting.DatabaseInitializer.getUSERNAME(), Network_setting.DatabaseInitializer.getPASSWORD());
                         String sql = "select * from users where username = ? or email = ?";
                         PreparedStatement statement = connection.prepareStatement(sql);
                         statement.setObject(1, s1);
@@ -406,7 +411,6 @@ public class RegisterWindow {
                             }
 
                             int resultUpdate = statement1.executeUpdate();
-                            System.out.println(resultUpdate);
                             //dialog
                             JDialog d1 = new JDialog(Jframe, "Success!!!", false);
                             //content

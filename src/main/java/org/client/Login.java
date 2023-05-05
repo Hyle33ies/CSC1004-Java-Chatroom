@@ -3,7 +3,7 @@ package org.client;
 import org.client.tools.Message;
 import org.client.tools.MessageType;
 import org.client.tools.User;
-import org.setting.Network_setting.Network_Setting;
+import org.setting.Network_setting;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,9 +25,8 @@ public class Login {
 
     public Login() throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
-        Network_Setting ns = new Network_Setting(); // update the database setting
-        System.out.println("Network Setting: " + ns);
-        connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
+        System.out.println("Login Connection Success: " + Network_setting.DatabaseInitializer.ToString());
+        connection = DriverManager.getConnection(Network_setting.DatabaseInitializer.getJdbcUrl() + "/" + Network_setting.DatabaseInitializer.getDatabaseName(), Network_setting.DatabaseInitializer.getUSERNAME(), Network_setting.DatabaseInitializer.getPASSWORD());
     }
 
     public void start() {
@@ -370,71 +369,6 @@ public class Login {
         JMenuBar menuBar = new JMenuBar();
         JMenu helpMenu = new JMenu("Help");
 
-        //Database Setting Menu Item
-        JMenuItem databaseSettingMenuItem = new JMenuItem("Database Setting");
-
-        databaseSettingMenuItem.addActionListener(e -> {
-            JDialog databaseSettingDialog = new JDialog();
-            databaseSettingDialog.setAlwaysOnTop(true);
-            databaseSettingDialog.setTitle("Database Setting");
-            databaseSettingDialog.setModal(false);
-            databaseSettingDialog.setLayout(new BorderLayout());
-
-            JTextArea noticeArea = new JTextArea(
-                    "1. Please enter your database settings in JDBC form. For example, I use mySQL as my database and the port number is initially 3306, the information should be stored in chatroom_users database, then the setting should be \"jdbc:mysql://localhost:3306/chatroom_users\".\n" +
-                            "2. Enter your user and password correctly!"
-            );
-            noticeArea.setEditable(false);
-            noticeArea.setLineWrap(true);
-            noticeArea.setWrapStyleWord(true);
-
-            JScrollPane noticeScrollPane = new JScrollPane(noticeArea);
-            noticeScrollPane.setPreferredSize(new Dimension(400, 100));
-            databaseSettingDialog.add(noticeScrollPane, BorderLayout.NORTH);
-
-            JPanel contentPanel = new JPanel();
-            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-
-            JPanel settingPanel = new JPanel(new BorderLayout());
-            JLabel settingLabel = new JLabel("Setting (JDBC URL):");
-            JTextField settingField = new JTextField();
-            settingPanel.add(settingLabel, BorderLayout.NORTH);
-            settingPanel.add(settingField, BorderLayout.CENTER);
-            contentPanel.add(settingPanel);
-
-            JPanel usernamePanel = new JPanel(new BorderLayout());
-            JLabel usernameLabel1 = new JLabel("Username:");
-            JTextField usernameField1 = new JTextField();
-            usernamePanel.add(usernameLabel1, BorderLayout.NORTH);
-            usernamePanel.add(usernameField1, BorderLayout.CENTER);
-            contentPanel.add(usernamePanel);
-
-            JPanel passwordPanel = new JPanel(new BorderLayout());
-            JLabel passwordLabel1 = new JLabel("Password:");
-            JPasswordField passwordField1 = new JPasswordField();
-            passwordPanel.add(passwordLabel1, BorderLayout.NORTH);
-            passwordPanel.add(passwordField1, BorderLayout.CENTER);
-            contentPanel.add(passwordPanel);
-
-            JButton confirmButton = new JButton("Confirm");
-            contentPanel.add(confirmButton);
-
-            confirmButton.addActionListener(e1 -> {
-                String setting = settingField.getText();
-                String username = usernameField1.getText();
-                String password = new String(passwordField1.getPassword());
-
-                // Update the database setting
-                Network_Setting ns = new Network_Setting(setting, username, password);
-                databaseSettingDialog.dispose();
-            });
-
-            databaseSettingDialog.add(contentPanel, BorderLayout.CENTER);
-            databaseSettingDialog.pack();
-            databaseSettingDialog.setLocationRelativeTo(null);
-            databaseSettingDialog.setVisible(true);
-        });
-
         //Exit Item
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(e -> ExitConfirmDialog.showExitConfirmDialog(frame));
@@ -442,7 +376,7 @@ public class Login {
         JMenuItem readmeMenuItem = new JMenuItem("ReadMe");
         readmeMenuItem.addActionListener(e -> {
             try {
-                File readmeFile = Paths.get("resources", "readme.md").toFile();
+                File readmeFile = Paths.get("./", "README.md").toFile();
                 Desktop.getDesktop().open(readmeFile);
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -451,8 +385,6 @@ public class Login {
 
         helpMenu.add(exitMenuItem);
         helpMenu.add(readmeMenuItem);
-//        helpMenu.add(databaseSettingMenuItem);
-        // Not available for now TODO
 
         JMenu functionMenu = new JMenu("Function");
         JMenuItem registerMenuItem = new JMenuItem("Register a new user for free");
@@ -464,12 +396,6 @@ public class Login {
             }
         });
         functionMenu.add(registerMenuItem);
-
-//        JMenuItem forgetPasswordMenuItem = new JMenuItem("I forgot my password!");
-        // Have implemented this function elsewhere
-
-
-//        functionMenu.add(forgetPasswordMenuItem);
 
         menuBar.add(helpMenu);
         menuBar.add(functionMenu);
@@ -558,10 +484,9 @@ public class Login {
         if (result.next()) {
             field1.setText(result.getString("username"));
             field2.setText(result.getString("password"));
-            System.out.println("Loaded user");
+            System.out.println("Loaded Remembered User");
             return true;
         }
-        System.out.println("No remembered user");
         return false;
     }
 

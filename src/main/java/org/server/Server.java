@@ -1,10 +1,10 @@
 package org.server;
 
 import org.client.tools.UserConnection;
-import org.setting.Network_setting.Network_Setting;
 import org.client.tools.MessageType;
 import org.client.tools.User;
 import org.client.tools.Message;
+import org.setting.Network_setting;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -35,9 +35,8 @@ public class Server {
         connectedUsers = Collections.synchronizedList(new ArrayList<>());
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Network_Setting ns = new Network_Setting();
-            System.out.println("Network Setting: " + ns);
-            connection = DriverManager.getConnection(ns.getPersonalized_setting(), ns.getPersonalized_username(), ns.getPersonalized_password());
+            System.out.println("Network Setting: " + Network_setting.DatabaseInitializer.ToString());
+            connection = DriverManager.getConnection(Network_setting.DatabaseInitializer.getJdbcUrl() + "/" + Network_setting.DatabaseInitializer.getDatabaseName(), Network_setting.DatabaseInitializer.getUSERNAME(), Network_setting.DatabaseInitializer.getPASSWORD());
 
             threadPool = Executors.newCachedThreadPool();
             // Preparations for socket programming and multi-thread programming.
@@ -118,7 +117,6 @@ public class Server {
                                     try {
                                         ObjectOutputStream targetOutputStream = targetUserConnection.getOutputStream();
                                         targetOutputStream.writeObject(message);
-                                        System.out.println("Send Successfully");
                                         targetOutputStream.flush();
                                     } catch (IOException e) {
                                         e.printStackTrace();
@@ -147,7 +145,6 @@ public class Server {
                                     try {
                                         ObjectOutputStream targetOutputStream = targetUserConnection.getOutputStream();
                                         targetOutputStream.writeObject(message);
-                                        System.out.println("File sent successfully");
                                         targetOutputStream.flush();
                                     } catch (IOException e) {
                                         e.printStackTrace();
@@ -170,7 +167,6 @@ public class Server {
                                     try {
                                         ObjectOutputStream targetOutputStream = targetUserConnection.getOutputStream();
                                         targetOutputStream.writeObject(message);
-                                        System.out.println("Emoji sent successfully");
                                         targetOutputStream.flush();
                                     } catch (IOException e) {
                                         e.printStackTrace();

@@ -88,15 +88,17 @@ Let's take a look at how the project is implemented.
 
 If you want to run the project on your own computer, you need to set up your database first!
 
-![image-20230504112813688](assets/image-20230504112813688.png)
+*Update 23/5/5: Update the Database Settings. Now you can modify the config files to set the database without digging into code!*
 
-Goto the Network_setting.java, find the code shown above, and replace the username and password with yours!
+Go to the `config.properties` file in the root directory, modify the jdbc settings. Replace the username and password with your own. Change the url to update your database and port number.
 
-You do not need to modify the setting string. You should have **mysql 8.0** or above, if your version number is "5.x", you may have to modify 3306 with 13306, notice that you should modify the 3306 in the DatabaseInitializer in this class, too!
+Note1: I haven't tested this on databases other than mySQL!
 
-Now, please run "Init_Database.java" before you launch the client and server side.
+Note2: You may need to update the port number to 13306 if you have a version of mySQL 5.x. But you are encouraged to update the mySQL.
 
-~~Make sure you **don't** have a database called "chatroom_users" now!~~
+Note3: You **don't need** to have a chatroom_users database for now! Follow the instructions and it will be created automatically.
+
+Now, please run `Init_Database.java` before you launch the client and server side.
 
 *Update 23/5/4: The Init_Database process is updated and now it's easier to use. It will automatically drop the database "chatroom_users" such that it's easier to test the code. Meanwhile, the bug that failing the connection when you test on your own computer is fixed.* 
 
@@ -104,7 +106,7 @@ Now, please run "Init_Database.java" before you launch the client and server sid
 
 Look at the Project Structure, the main code are divided into three parts.
 
-The other two runnable programs are "client/Client" and "server/Server". Please run them.
+The other two runnable programs are `client/Client` and `server/Server`. Please run them.
 
 The server doesn't have a GUI and logs will be outputed in the system console. You don't need to understand them in order to use this application.
 
