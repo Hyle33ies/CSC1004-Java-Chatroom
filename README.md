@@ -1,9 +1,10 @@
 # README
 
-Last Updated: 2023.5.5
-Scores: 98/100 + early bonus (Comments-2)
+Last Updated: 2023.5.24
 
-**If you are the course TA and need to grade this project, please skip my nonsence in the introduction and jump to "Getting Started".**
+Scores: 98/100 (Comments-2) + early bonus
+
+**If you are the course TA and need to grade this project, please skip my nonsense in the introduction and jump to "Getting Started".**
 
 # Table of Contents
 
@@ -34,8 +35,6 @@ The most challenging part for me was IOStream, as there are many types to manage
 
 For more detailed explanations about the code, please refer to the last part of this README.
 
-If you're a future CUHKSZ student taking CSC1004 and need help with this project, feel free to contact me through the school email or any other way.
-
 ID: 122090180
 
 Points gotten in this project: ? / 100
@@ -46,7 +45,7 @@ See [here](https://guiliang.github.io/courses/cuhk-csc-1004/csc-1004-marking-rul
 
 ##### Common Grading (20 pts)
 
-- [x] Code Documention 5 pts 
+- [x] Code Documentation 5 pts 
 - [x] Video 5 pts
 - [x] Tutorial for Running 5 pts
 - [x] Can run 5 tps
@@ -81,7 +80,7 @@ See [here](https://guiliang.github.io/courses/cuhk-csc-1004/csc-1004-marking-rul
 
 ## Getting Started
 
-*Update 23/4/19: The video tutorial is uploaded and you can see it in the resources folder.*
+*Update 23/4/19: The video tutorial is uploaded, and you can see it in the resources folder.*
 
 *Update 23/4/19: The Bi-weekly report, which accounts for 10% of the assessment, has also been uploaded for reference. I didn't actually stick to the schedule I made in the first week. Plans change, don't they?*
 
@@ -109,7 +108,7 @@ Look at the Project Structure, the main code are divided into three parts.
 
 The other two runnable programs are `client/Client` and `server/Server`. Please run them.
 
-The server doesn't have a GUI and logs will be outputed in the system console. You don't need to understand them in order to use this application.
+The server doesn't have a GUI and logs will be outputted in the system console. You don't need to understand them in order to use this application.
 
 The client side should look like this. **If this window is successfully launched, it means your database setting is correct**, otherwise, please update your database setting with the instructions above.![](assets/image-20230417223031903.png)
 
@@ -139,7 +138,7 @@ Now you should enter this GUI!
 
 ## Multi-Client Chat
 
-To generate multiple users to simulate multi-client chat, you can click on "New User Login" to arouse another login window, you can login with another user. **Don't use** your current user! This will cause confusion when chatting (you cannot get yourself while Getting Online Friends).
+To generate multiple users to simulate multi-client chat, you can click on "New User Login" to arouse another login window, you can log in with another user. **Don't use** your current user! This will cause confusion when chatting (you cannot get yourself while Getting Online Friends).
 
 *update 23.4.19: The confusion here is solved in the newest version. If you have logged in, you'll be banned from logging with the same user!*
 
@@ -169,7 +168,7 @@ The files function will do for all kinds of files. Folders are not supported cur
 
 If you send a picture (image files, jpg/jpeg/gif/bmp/tif/tiff), both you and the receiver can see the pictures on the screen and the receiver will get a reminder asking him/her whether he/she wants the file to be saved. Since Files, including Images **will not be recorded by the history** function, you should save the file if necessary, you cannot save the image after this chance, either!
 
-Currently if you save a file that has identical name with another file, it WILL cover the other one!
+Currently, if you save a file that has identical name with another file, it WILL cover the other one!
 
 #### Message History
 
@@ -181,7 +180,7 @@ Note that emoji and files will not be recorded. The former is not important (I t
 
 ![image-20230417232156781](assets/image-20230417232156781.png)
 
-"New User Login" will arouse another login window except the current one as I've mentioned before. Meanwhile "Login with another user" will exit the current user and arouse the new login window.
+"New User Login" will arouse another login window except the current one as I've mentioned before. Meanwhile, "Login with another user" will exit the current user and arouse the new login window.
 
 "Update Profile" item can update your information easily. This, for sure, will be recorded by the database.
 
@@ -201,7 +200,7 @@ Message and MessageType are the most important. They represent a protocol that t
 
 Initially, I provided a narrower interface, but later added features like FileExtension, fileName, and userList, which honestly shouldn't be part of a "Message" class. I took a shortcut here to avoid using inheritance and polymorphism, which isn't the best OOP practice. I might update this in the future if possible.
 
-The User class is self-explainatory. It stores the information of each user.
+The User class is self-explanatory. It stores the information of each user.
 
 UserConnection is an underlying structure that stores both User and network settings. The current version of this class isn't the initial design either. Due to an unknown error (at least to me), I can only access the outputStream by wrapping it in an object when transmitted because if I try to connect the user by IP and port, it simply fails. This might also be improved in the future.
 
