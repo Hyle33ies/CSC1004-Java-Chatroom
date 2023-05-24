@@ -37,8 +37,6 @@ For more detailed explanations about the code, please refer to the last part of 
 
 ID: 122090180
 
-Points gotten in this project: ? / 100
-
 ## Assessment / Function List
 
 See [here](https://guiliang.github.io/courses/cuhk-csc-1004/csc-1004-marking-rules.html).
